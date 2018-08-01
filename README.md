@@ -1,2 +1,2 @@
-# Homseer
-Homseer scripts and tools
+# Homeseer
+Homeseer scripts and tools
