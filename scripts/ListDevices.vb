@@ -36,7 +36,7 @@ Public Sub DevChk(Parms As Object)
         hs.WriteLog(label, "cnt:  " & cnt & " max: " & max & " total: " & total)
         hs.SetDeviceValueByRef(DeviceCountRef, cnt, True)
         hs.SetDeviceValueByRef(LastDeviceRef, max , True)
-        hs.SetDeviceValueByRef(DeviceChksumRef , total, True)
+        hs.SetDeviceValueByRef(DeviceChksumRef, total, True)
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try

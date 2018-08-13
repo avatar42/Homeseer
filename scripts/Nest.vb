@@ -68,7 +68,7 @@ Public Sub NestBump(ByVal delta As Object)
     If lset < hset Then ' if cur temp closer to low temp
         If hs.DeviceValue(TargetTemperatureLowRef) = curTemp Then
             lset = curTemp + delta
-            hs.SetDeviceValueByRef(HVACModeRef , 1, TRUE) ' swtich to heat mode
+            hs.SetDeviceValueByRef(HVACModeRef, 1, TRUE) ' swtich to heat mode
         Else
             lset = curTemp
         End If
@@ -78,7 +78,7 @@ Public Sub NestBump(ByVal delta As Object)
         lset = hs.DeviceValue(TargetTemperatureLowRef)
         If hs.DeviceValue(TargetTemperatureLowRef) = curTemp Then
             hset = curTemp + delta
-            hs.SetDeviceValueByRef(HVACModeRef , 2, TRUE) ' switch to cool mode
+            hs.SetDeviceValueByRef(HVACModeRef, 2, TRUE) ' switch to cool mode
         Else
             hset = curTemp
         End If
@@ -86,7 +86,7 @@ Public Sub NestBump(ByVal delta As Object)
     hs.SetDeviceValueByRef(TargetTemperatureLowRef, lset, TRUE)
     hs.SetDeviceValueByRef(TargetTemperatureHighRef, hset, TRUE)
     hs.SetDeviceValueByRef(RmrrRef, 1, TRUE) 'Home
-    hs.SetDeviceValueByRef(HVACModeRef , 3, TRUE) ' switch to auto mode Hopefully this or previous will break out of eco mode
+    hs.SetDeviceValueByRef(HVACModeRef, 3, TRUE) ' switch to auto mode Hopefully this or previous will break out of eco mode
 
     hs.WriteLog("NestBump", "Setting range to " & lset & " degrees to " & hset)
     nestStatus("New")
