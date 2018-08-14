@@ -34,9 +34,9 @@ Public Sub DevChk(Parms As Object)
             End If
         Loop Until EN.Finished
         hs.WriteLog(label, "cnt:  " & cnt & " max: " & max & " total: " & total)
-        hs.SetDeviceValueByRef(DeviceCountRef, cnt, True)
-        hs.SetDeviceValueByRef(LastDeviceRef, max , True)
-        hs.SetDeviceValueByRef(DeviceChksumRef, total, True)
+        hs.SetDeviceValueByRef(DeviceCount1522Ref, cnt, True)
+        hs.SetDeviceValueByRef(LastDevice2975Ref, max , True)
+        hs.SetDeviceValueByRef(DeviceChksum4597Ref, total, True)
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
