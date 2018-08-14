@@ -2,8 +2,8 @@
 #Include Refs.vb
 
 'methods for handling speech announcements of various tyes
-'lastSaid:Dim lastSaidRef = 2969
-' Say everywhere ignoring AnnounceModeRef value
+'lastSaid:Dim lastSaid2969Ref = 2969
+' Say everywhere ignoring AnnounceMode981Ref value
 Public Sub sayAlert(ByVal parm As Object)
     Try
         hs.speakEx(0, parm, False)
@@ -19,31 +19,40 @@ Public Sub sayLog(ByVal parm As Object)
     sayString(parm & ". Check Homeseer log")
 End Sub
 
+
+Public Sub sayHarm1(ByVal parm As Object)
+    sayString("Changing to " & hs.DeviceString(Harm1activity2876Ref))
+End Sub
+
+Public Sub sayHarm2(ByVal parm As Object)
+    sayString("Changing to " & hs.DeviceString(Harm2activity3393Ref))
+End Sub
+
 Public Sub announce(ByVal parm As Object)
     hs.speak(parm)
     setLast(parm)
 End Sub
 
 Public Sub sayLast(ByVal parm As Object)
-    hs.speak(hs.DeviceString(lastSaidRef))
+    hs.speak(hs.DeviceString(lastSaid2969Ref))
 End Sub
 
 Public Sub setLast(ByVal parm As Object)
     Try
         Try
-            hs.SetDeviceString(lastSaidRef,parm,TRUE)
+            hs.SetDeviceString(lastSaid2969Ref,parm,TRUE)
         Catch ex As Exception
-            hs.SetDeviceString(lastSaidRef,"Last was not stored",TRUE)
+            hs.SetDeviceString(lastSaid2969Ref,"Last was not stored",TRUE)
         End Try
     Catch ex As Exception
-        hs.WriteLog("setLast", "lastSaidRef:" & lastSaidRef & "parm:" & parm)
+        hs.WriteLog("setLast", "lastSaid2969Ref:" & lastSaid2969Ref & "parm:" & parm)
     End Try
 
 End Sub
 
 Public Sub sayString(ByVal parm As Object)
-    hs.WriteLog("sayString", "passed:" & hs.DeviceValue(AnnounceModeRef) & ":" & parm)
-    Select Case hs.DeviceValue(AnnounceModeRef)
+    hs.WriteLog("sayString", "passed:" & hs.DeviceValue(AnnounceMode981Ref) & ":" & parm)
+    Select Case hs.DeviceValue(AnnounceMode981Ref)
         Case 1
             ' Say only on clients
             hs.speak(parm)
