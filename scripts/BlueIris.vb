@@ -35,6 +35,8 @@ Public Sub callTrigger(ByVal host As String, ByVal camName As String, ByVal port
             hs.WriteLog(label, "camera " & camName & " not found")
         Else If (Instr(page,"var login_version") > 0) Then 
             hs.WriteLog(label, "secure session keys blocking API calls. Turn off.")
+        Else If (Instr(page,"Authorization required") > 0) Then 
+            hs.WriteLog(label, "Login info is incorrect")
         Else
             ' sucessful response is
             'signal=greenprofile=-1lock=0camera=longName
