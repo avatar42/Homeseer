@@ -14,6 +14,20 @@ Public Function isNotFiltered(ByVal dv As Scheduler.Classes.DeviceClass) As Bool
     Return InStr(cat, "NoData") = 0 And InStr(cat, "Root") = 0 And InStr(cat, "Counters-Timers") = 0 And InStr(rm, "Remove") = 0 And InStr(cat, "UnusedValues") = 0 And InStr(cat, "UPS") = 0 And InStr(rm, "UltraWeatherWU3 Plugin") = 0
 End Function
 
+' true if device should be updated at least once every 24 hours
+Public Function chk24(ByVal dv As Scheduler.Classes.DeviceClass) As Boolean
+    Dim cat = dv.Location2(Nothing)
+    Dim rm = dv.Location(Nothing)
+    Return InStr(dv.Location2(Nothing), "Batteries") = 0
+End Function
+
+' true if device should be updated at least once every hour
+Public Function chk1(ByVal dv As Scheduler.Classes.DeviceClass) As Boolean
+    Dim cat = dv.Location2(Nothing)
+    Dim rm = dv.Location(Nothing)
+    Return InStr(dv.Location2(Nothing), "WMI") > 0 Or InStr(dv.Location2(Nothing), "WirelessTag") > 0
+End Function
+
 ' Mark device offline after storing current location
 Public Function markOffline(ByVal dv As Scheduler.Classes.DeviceClass)
     If Not dv.Location2(hs) = offlineLoc Then
@@ -58,11 +72,13 @@ Public Function markNoChk(ByVal dv As Scheduler.Classes.DeviceClass)
 End Function
 
 ' Look for devices that have stopped updating.
+' Sets (CheckedDeviceCount4605Ref)
 Public Sub chkSensors(unused As Object)
     Dim label As String = "chkSensors"
     Dim now As DateTime = DateTime.Now
     Dim file As System.IO.StreamWriter
     Dim downDevs As Integer = 0
+    Dim chkdTotal As Integer = 0
     Try
         Dim dv As Scheduler.Classes.DeviceClass
         Dim EN As Scheduler.Classes.clsDeviceEnumeration = hs.GetDeviceEnumerator  'Get all devices
@@ -86,8 +102,9 @@ Public Sub chkSensors(unused As Object)
                 If isNotFiltered(dv) Then
                     Dim lastChg As DateTime = dv.Last_Change(Nothing)
                     Dim span = now - lastChg
+                    chkdTotal = chkdTotal + 1
                     ' Note while checking down for 24 hours is good for most, if you are checking thinks that update once a day 36 or 48 is better. 
-                    If span.TotalHours > 48 Or (span.TotalHours > 24 And InStr(dv.Location2(Nothing), "Batteries") = 0) Then
+                    If span.TotalHours > 48 Or (span.TotalHours > 24 And chk24(dv)) Or (span.TotalHours > 1 And chk1(dv)) Then
                         Dim attrs As String = ""
                         For i As Integer = 1 To 1048576
                             If dv.MISC_Check(hs, i) Then
@@ -100,8 +117,8 @@ Public Sub chkSensors(unused As Object)
                         file.WriteLine("" & dv.Ref(Nothing) & "," & dv.Location2(Nothing) & "," & dv.Location(Nothing) & "," & dv.Name(Nothing) & "," & dv.devValue(Nothing) & "," & dv.Last_Change(Nothing) & "," & attrs & "," & span.TotalHours)
                         markOffline(dv)
                         downDevs = downDevs + 1
-                        ' if has recovered since last chk restore the cat to remove from check list
                     Else
+                        ' if has recovered since last chk restore the cat to remove from check list
                         restoreDevice(dv)
                     End If
                 Else
@@ -115,6 +132,7 @@ Public Sub chkSensors(unused As Object)
                 restoreDevice(dv)
             End If
         Loop Until EN.Finished
+        hs.SetDeviceValueByRef(CheckedDeviceCount4605Ref, chkdTotal, True)
         If downDevs > 0 Then
             sayString("" & downDevs & " devices are off line.")
             hs.TriggerEvent("Pink - Homeseer error")
