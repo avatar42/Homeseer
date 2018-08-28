@@ -1,8 +1,9 @@
 ﻿' ref for mapped objects
 #Include Refs.vb
 
-'methods for handling speech announcements of various tyes
+'methods for handling speech announcements of various types
 'lastSaid:Dim lastSaid2969Ref = 2969
+
 ' Say everywhere ignoring AnnounceMode981Ref value
 Public Sub sayAlert(ByVal parm As Object)
     Try
@@ -20,12 +21,20 @@ Public Sub sayLog(ByVal parm As Object)
 End Sub
 
 
-Public Sub sayHarm1(ByVal parm As Object)
-    sayString("Changing to " & hs.DeviceString(Harm1activity2876Ref))
+'Announce that device has changed to new value
+Public Sub sayValue(ByVal dvRef As Object)
+    Dim dv
+
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString("Changed " & dv.Name(Nothing) & " to " & dv.devValue(Nothing))
 End Sub
 
-Public Sub sayHarm2(ByVal parm As Object)
-    sayString("Changing to " & hs.DeviceString(Harm2activity3393Ref))
+'Announce that device has changed to new String value
+Public Sub sayVString(ByVal dvRef As Object)
+    Dim dv
+
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString("Changed " & dv.Name(Nothing) & " to " & dv.devString(Nothing))
 End Sub
 
 Public Sub announce(ByVal parm As Object)
