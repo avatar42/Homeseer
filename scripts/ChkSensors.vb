@@ -25,7 +25,7 @@ End Function
 Public Function chk1(ByVal dv As Scheduler.Classes.DeviceClass) As Boolean
     Dim cat = dv.Location2(Nothing)
     Dim rm = dv.Location(Nothing)
-    Return InStr(dv.Location2(Nothing), "WMI") > 0 Or InStr(dv.Location2(Nothing), "WirelessTag") > 0
+    Return InStr(dv.Location2(Nothing), "WMI") > 0 Or InStr(dv.Location2(Nothing), "WirelessTag") > 0 Or InStr(dv.Device_Type_String(Nothing), "Netatmo Update") > 0
 End Function
 
 ' Mark device offline after storing current location
@@ -117,6 +117,9 @@ Public Sub chkSensors(unused As Object)
                         file.WriteLine("" & dv.Ref(Nothing) & "," & dv.Location2(Nothing) & "," & dv.Location(Nothing) & "," & dv.Name(Nothing) & "," & dv.devValue(Nothing) & "," & dv.Last_Change(Nothing) & "," & attrs & "," & span.TotalHours)
                         markOffline(dv)
                         downDevs = downDevs + 1
+                        If chk1(dv) Then
+                            sayString("" & dv.Name(Nothing) & " is off line.")
+                        End If
                     Else
                         ' if has recovered since last chk restore the cat to remove from check list
                         restoreDevice(dv)
