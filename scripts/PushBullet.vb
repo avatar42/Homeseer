@@ -17,13 +17,31 @@ End Sub
 'Dim AlarmAway = 3
 'Dim AlarmLevel2899Ref = 2899
 
-'params in format of title#message you want to send
+'params in format of title#message you want to send OR 
+'the device ref of a device like a door sensor where a value of 0 is closed and > 0 is open
+
+Function ref2params(ByVal params As Object) As String
+    if Instr(params,"#") > 0 Then
+        return params
+    Else
+        Dim dv
+
+        dv = hs.GetDeviceByRef(params)
+        if (dv.devValue(Nothing) > 0) Then
+            return "" & dv.Name(Nothing) & " Changed#to Open"
+        Else
+            return "" & dv.Name(Nothing) & " Changed#to Closed"
+        End if
+
+    End If
+End Function
+
 
 ' Send if alarm in away mode
 Sub SendMsgIfAway(ByVal params As String) 
     Dim label = "SendMsgIfAway"
     hs.WriteLog(label, "AlarmLevel2899Ref:" & hs.DeviceValue(AlarmLevel2899Ref))
-
+    params = ref2params(params)
     if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmAway Then
         SendMsg(params & " in away mode")
     Else if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmHome Then
@@ -37,7 +55,7 @@ End Sub
 Sub SendMsgIfPerm(ByVal params As String) 
     Dim label = "SendMsgIfPerm"
     hs.WriteLog(label, "AlarmLevel2899Ref:" & hs.DeviceValue(AlarmLevel2899Ref))
-
+    params = ref2params(params)
     if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmAway Then
         SendMsgIfAway(params)
     Else if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmPerm Then
