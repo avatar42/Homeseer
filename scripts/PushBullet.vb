@@ -18,8 +18,13 @@ End Sub
 'Dim AlarmLevel2899Ref = 2899
 
 'params in format of title#message you want to send OR 
-'the device ref of a device like a door sensor where a value of 0 is closed and > 0 is open
-
+'the device ref of a device that has a status string OR 
+'the device ref of a device like a door sensor where a value of 0 is closed and > 0 is open 
+'
+' if params has # delimiter then return params
+' else assume device ref and if has status string return Name Changed#to Status String
+' else return Name Changed#to Open if device value > 0 
+' else return Name Changed#to Closed
 Function ref2params(ByVal params As Object) As String
     if Instr(params,"#") > 0 Then
         return params
@@ -27,12 +32,16 @@ Function ref2params(ByVal params As Object) As String
         Dim dv
 
         dv = hs.GetDeviceByRef(params)
-        if (dv.devValue(Nothing) > 0) Then
-            return "" & dv.Name(Nothing) & " Changed#to Open"
-        Else
-            return "" & dv.Name(Nothing) & " Changed#to Closed"
-        End if
-
+        if dv.devString(Nothing) is Nothing Then
+            if (dv.devValue(Nothing) > 0) Then
+                return "" & dv.Name(Nothing) & " Changed#to Open"
+            Else
+                return "" & dv.Name(Nothing) & " Changed#to Closed"
+            End if
+        Else 
+            return "" & dv.Name(Nothing) & " Changed#to " & dv.devString(Nothing).Replace("*","")
+        End If
+        
     End If
 End Function
 
