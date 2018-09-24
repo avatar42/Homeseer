@@ -1,4 +1,5 @@
-﻿Const AlarmOff = 0
+﻿' should probably change AlarmLevel2899Ref usages to use Partition14702Ref instead and the matching values
+Const AlarmOff = 0
 Const AlarmHome = 1
 Const AlarmPerm = 2
 Const AlarmAway = 3
@@ -36,7 +37,9 @@ Const DeviceChksum4597Ref = 4597
 Const CheckedDeviceCount4605Ref = 4605
 Const CamSwitchInput4606Ref = 4606
 Const ZettaguardAVSwitch4677Ref = 4677
+Const Partition14702Ref = 4702
+Const Focusedcam4720Ref = 4720
 
 Public Sub RefsLoaded(ByVal delta As Object)
-   hs.WriteLog("Refs","Refs loaded:" & 33 & " device refs")
+   hs.WriteLog("Refs","Refs loaded:" & 35 & " device refs")
 End Sub

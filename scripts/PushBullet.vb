@@ -10,12 +10,13 @@ Sub Main(ByVal params As String)
     SendMsg(params)
 End Sub
 
-'Refs used
-'Dim AlarmOff = 0
-'Dim AlarmHome = 1
-'Dim AlarmPerm = 2
-'Dim AlarmAway = 3
-'Dim AlarmLevel2899Ref = 2899
+' uses (Partition14702Ref)
+' (AlarmLevel2899Ref)
+' Const AlarmOff = 0
+' Const AlarmHome = 1
+' Const AlarmPerm = 2
+' Const AlarmAway = 3
+
 
 'params in format of title#message you want to send OR 
 'the device ref of a device that has a status string OR 
@@ -23,6 +24,7 @@ End Sub
 '
 ' if params has # delimiter then return params
 ' else assume device ref and if has status string return Name Changed#to Status String
+' else if device ref is Partition14702Ref then decode state from status strings
 ' else return Name Changed#to Open if device value > 0 
 ' else return Name Changed#to Closed
 Function ref2params(ByVal params As Object) As String
@@ -32,8 +34,57 @@ Function ref2params(ByVal params As Object) As String
         Dim dv
 
         dv = hs.GetDeviceByRef(params)
-        if dv.devString(Nothing) is Nothing Then
-            if (dv.devValue(Nothing) > 0) Then
+    hs.WriteLog("ref2params", "devString:(" & dv.devValue(Nothing) & ")")
+        if String.IsNullOrEmpty(dv.devString(Nothing)) Then
+            if (Partition14702Ref = params) Then
+                Dim cond
+                try
+                    Select Case hs.DeviceValue(Partition14702Ref)
+                        Case -1005
+                            cond = "Disarm"
+                        Case -1004
+                            cond = "Arm Maximum"
+                        Case -1003
+                            cond = "Arm Instant"
+                        Case -1002
+                            cond = "Arm Night-Stay"
+                        Case -1001
+                            cond = "Arm Away"
+                        Case -1000
+                            cond = "Arm Stay"
+                        Case 0
+                            cond = "Unknown"
+                        Case 1
+                            cond = "Ready"
+                        Case 2
+                            cond = "Ready to Arm (Zones are Bypassed)"
+                        Case 3
+                            cond = "Not ready"
+                        Case 4
+                            cond = "Armed in Stay Mode"
+                        Case 5
+                            cond = "Armed in Away Mode"
+                        Case 6
+                            cond = "Armed Instant (Zero Entry Delay - Stay)"
+                        Case 7
+                            cond = "Exit Delay in Progress"
+                        Case 8
+                            cond = "In Alarm"
+                        Case 9
+                            cond = "Alarm has Occured"
+                        Case 10
+                            cond = "Armed Maximum (Zero Entry Delay - Away)"
+                        Case 11
+                            cond = "Armed in Night Stay Mode"
+                        Case Else
+                            cond = "Error"
+                    End Select
+                    return "" & dv.Name(Nothing) & " Changed#to " & cond
+                Catch ex As Exception
+                    hs.WriteLog("Error", "Exception in script ref2params:  " & ex.Message)
+                End Try
+
+            Else if (dv.devValue(Nothing) > 0) Then
                 return "" & dv.Name(Nothing) & " Changed#to Open"
             Else
                 return "" & dv.Name(Nothing) & " Changed#to Closed"
