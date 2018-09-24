@@ -31,6 +31,8 @@ Public Sub consoleClear(ByVal notUsed As String)
     callBI("Iris2","All cameras",8078,SHOW)
     callBI("Iris3","All cameras",8076,SHOW)
     callBI("Iris4","All cameras",8077,SHOW)
+    hs.SetDeviceString(Focusedcam4720Ref,"All consoles cleared",TRUE)
+    hs.SetDeviceValueByRef(Focusedcam4720Ref, 0, TRUE)
 End Sub
 
 ' Set console back to All cameras
@@ -57,8 +59,8 @@ End Sub
 ' grpName = the group name of the cameras to bring forward on the console
 ' highlight = Y means bring group forward even if Windfilter3864Ref = 1. N means bring group forward only if Windfilter3864Ref = 0
 ' switchNow = Y means switch main video even if Windfilter3864Ref = 1. N means switch main video only if Windfilter3864Ref = 0
-' uses (Windfilter3864Ref)
-' (CamSwitchInput4606Ref)
+' uses (Windfilter3864Ref) a flag for reducing highlighting during storms.
+' (CamSwitchInput4606Ref) control for PiP HDMI switch
 Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As String)
     Dim args() As String = Split(parms, ",")
     Dim camName As String = args(0)
@@ -69,7 +71,6 @@ Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As St
     callBI(host,camName,port,TRIGGER)
     If hs.DeviceValue(Windfilter3864Ref) = 0 Or (Instr(highlight,"Y") > 0) Then
         callBI(host,grpName,port,SHOW)
-        sayString ("Highlighting " & grpName & " on " & host)
     End If
     If hs.DeviceValue(Windfilter3864Ref) = 0 Or (Instr(switchNow,"Y") > 0) Then
         If (Instr(host,"Iris2") > 0) Then
@@ -96,7 +97,8 @@ End Sub
 '
 ' With command of show = shows the camera group on the console. 
 ' ctlName is the cam group name (camera names will not work) in the camera's config. Must macth exactly. Toi show all use "All cameras"
-' uses (CamSwitchInput4606Ref)
+' uses (CamSwitchInput4606Ref) control for PiP HDMI switch
+' (Focusedcam4720Ref) holds last Highlighting message
 Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As integer, ByVal command As String)
     Dim label = "callBI"
     Dim page = ""
@@ -108,7 +110,27 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
             ' reset timer for host console
             hs.TimerReset(host & "_motion_delay")
         Else If (Instr(command,SHOW) > 0) Then 
-            hs.WriteLog(label, "ctlName:" & ctlName & " host:" & host & " switch before:" & hs.DeviceValue(CamSwitchInput4606Ref))
+            'hs.WriteLog(label, "ctlName:" & ctlName & " host:" & host & " switch before:" & hs.DeviceValue(CamSwitchInput4606Ref))
+            Try
+                Try
+                    hs.SetDeviceString(Focusedcam4720Ref,"Highlighting " & ctlName & " on " & host,TRUE)
+                    If (Instr(host,"Iris2") > 0) Then
+                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 2, TRUE)
+                    Else If (Instr(host,"Iris3") > 0) Then 
+                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 3, TRUE)
+                    Else If (Instr(host,"Iris4") > 0) Then 
+                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 4, TRUE)
+                    Else
+                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 1, TRUE)
+                    End If
+
+                Catch ex As Exception
+                    hs.SetDeviceString(Focusedcam4720Ref,"Focusedcam was not stored",TRUE)
+                End Try
+            Catch ex As Exception
+                hs.WriteLog("callBI", "Focusedcam4720Ref:" & Focusedcam4720Ref & "parm:" & "Highlighting " & ctlName & " on " & host)
+            End Try
+
             If (Instr(ctlName,"All cameras") > 0) Then 
                 ' switch video distribution to main video (input 1)
                 hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 1, TRUE)
