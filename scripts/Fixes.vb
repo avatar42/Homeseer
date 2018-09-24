@@ -68,7 +68,7 @@ Public Sub setImageByAddr(ByVal parms As String)
                 Exit Sub
             End If
             ' offline and of type
-            If InStr(dv.Address(Nothing), addrStr) > 0 Then
+            If InStr(dv.Address(Nothing), addrStr) > 0 And InStr(dv.Location2(Nothing), "Root") = 0 Then
                 dv.Image(hs) = path
                 hs.WriteLog(label, "Changed " & dv.Ref(Nothing) & ":" & dv.Name(Nothing) & " From:" & dv.Image(Nothing) & " To:" & path)
                 chgDevs = chgDevs + 1
