@@ -26,7 +26,7 @@ Public Sub sayValue(ByVal dvRef As Object)
     Dim dv
 
     dv = hs.GetDeviceByRef(dvRef)
-    sayString("Changed " & dv.Name(Nothing) & " to " & dv.devValue(Nothing))
+    sayString(dv.Name(Nothing) & " " & dv.devValue(Nothing))
 End Sub
 
 'Announce that device has changed to new String value
@@ -34,7 +34,7 @@ Public Sub sayVString(ByVal dvRef As Object)
     Dim dv
 
     dv = hs.GetDeviceByRef(dvRef)
-    sayString("Changed " & dv.Name(Nothing) & " to " & dv.devString(Nothing))
+    sayString(dv.Name(Nothing) & " " & dv.devString(Nothing))
 End Sub
 
 Public Sub announce(ByVal parm As Object)

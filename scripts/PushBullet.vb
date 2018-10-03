@@ -23,10 +23,10 @@ End Sub
 'the device ref of a device like a door sensor where a value of 0 is closed and > 0 is open 
 '
 ' if params has # delimiter then return params
-' else assume device ref and if has status string return Name Changed#to Status String
+' else assume device ref and if has status string return Name # Status String
 ' else if device ref is Partition14702Ref then decode state from status strings
-' else return Name Changed#to Open if device value > 0 
-' else return Name Changed#to Closed
+' else return Name # Open if device value > 0 
+' else return Name # Closed
 Function ref2params(ByVal params As Object) As String
     if Instr(params,"#") > 0 Then
         return params
@@ -79,18 +79,18 @@ Function ref2params(ByVal params As Object) As String
                         Case Else
                             cond = "Error"
                     End Select
-                    return "" & dv.Name(Nothing) & " Changed#to " & cond
+                    return "" & dv.Name(Nothing) & " # " & cond
                 Catch ex As Exception
                     hs.WriteLog("Error", "Exception in script ref2params:  " & ex.Message)
                 End Try
 
             Else if (dv.devValue(Nothing) > 0) Then
-                return "" & dv.Name(Nothing) & " Changed#to Open"
+                return "" & dv.Name(Nothing) & " # Open"
             Else
-                return "" & dv.Name(Nothing) & " Changed#to Closed"
+                return "" & dv.Name(Nothing) & " # Closed"
             End if
         Else 
-            return "" & dv.Name(Nothing) & " Changed#to " & dv.devString(Nothing).Replace("*","")
+            return "" & dv.Name(Nothing) & " # " & dv.devString(Nothing).Replace("*","")
         End If
         
     End If
