@@ -153,9 +153,10 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
         Else If (Instr(page,"Authorization required") > 0) Then 
             'hs.WriteLog(label, "Login info is incorrect")
             sayString( "Login info is incorrect for " & host)
-        Else If (Instr(page,"signal=greenprofile=-1lock=0") > 0) Then 
-            ' sucessful response is
+        Else If (Instr(page,"signal=greenprofile=") > 0) Then 
+            ' sucessful responses can be
             ' signal=greenprofile=-1lock=0camera=longName
+            ' signal=greenprofile=1lock=2
             hs.WriteLog(label, "" & command & " " & ctlName & " was sucessful")
         Else 
             hs.WriteLog(label, "GetURL returned:" & page)
