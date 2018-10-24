@@ -1,6 +1,6 @@
 ' See https://homeseer.com/support/homeseer/HS3/SDK/default.htm for API info
 ' See https://github.com/avatar42/MyMonitor for info on MyMonitor
-' Valid typeStrs are: cam, ptz, camA, ptzA, tivo and web which is the default
+' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, wu, ssh and web which is the default
 Sub createMonDev(ByVal parms As Object)
     Dim args() As String = Split(parms, ",")
     Dim label As String = "createMonDev"
