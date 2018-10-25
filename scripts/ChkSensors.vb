@@ -25,7 +25,7 @@ End Function
 Public Function chk1(ByVal dv As Scheduler.Classes.DeviceClass) As Boolean
     Dim cat = dv.Location2(Nothing)
     Dim rm = dv.Location(Nothing)
-    Return InStr(dv.Location2(Nothing), "WMI") > 0 Or InStr(dv.Location2(Nothing), "WirelessTag") > 0 Or InStr(dv.Device_Type_String(Nothing), "Netatmo Update") > 0
+    Return InStr(dv.Location2(Nothing), "WMI") > 0 Or InStr(dv.Location2(Nothing), "MyMonitor") > 0 Or InStr(dv.Location2(Nothing), "WirelessTag") > 0 Or InStr(dv.Device_Type_String(Nothing), "Netatmo Update") > 0
 End Function
 
 ' Mark device offline after storing current location
