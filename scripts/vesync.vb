@@ -9,7 +9,7 @@ Imports Newtonsoft.Json.Linq
 #Include Secrets.vb
 
 ' Note there is a lot more logging in here than is really needed to make sorting issues easier. Set the following to false to turn off extra logging
-Dim debug As boolean = true
+Dim debug As boolean = false
 
 Const BASE_URL As String = "https://smartapi.vesync.com"
 
