@@ -14,22 +14,22 @@
 '(S1CurrentCondition1233Ref)
 
 
-Public Sub weatherAlert(ByVal delta As Object)
+Public Sub weatherAlert(ByVal notUsed As Object)
     sayString("Last alert was "& hs.DeviceString(S1LastAlertMessage1355Ref))
 End Sub
 
-Public Sub weatherStatus(ByVal delta As Object)
+Public Sub weatherStatus(ByVal notUsed As Object)
     Dim label As String = "weatherStatus"
     try
         'sayAlert("Currently condition is " & hs.DeviceString(S2CurrentCondition1238Ref) & " With a feels like temperature of " & hs.DeviceValue(S2TemperatureFeelsLike1202Ref) & " degrees")
-        SayCurrentCondition(delta)
+        SayCurrentCondition()
         'wind spelled wend to sound right
         sayAlert("wend is from the " & windDirection(hs.DeviceValue(S1WindDirection1215Ref)) & " gusting to " & hs.DeviceValue(S1GustSpeed1212Ref) & " miles per hour")
         sayAlert("Rain since midnight is  " & hs.DeviceValue(S1RainToday1216Ref) & " inches")
         sayAlert("Expected high is  " & hs.DeviceValue(S1TodayHigh1243Ref) & " compared to the normal of " & hs.DeviceValue(S1TemperatureHighNormal1182Ref) & " degrees")
         sayAlert("Expected low is  " & hs.DeviceValue(S1TodayLow1244Ref) & " compared to the normal of " & hs.DeviceValue(S1TemperatureLowNormal1185Ref) & " degrees")
         sayAlert("Forecast is  " & hs.DeviceString(S1TodayPrediction1245Ref))
-             sayAlert("There are "& hs.DeviceValue(WeatherAlerts1179Ref) & " alerts in effect")
+        sayAlert("There are "& hs.DeviceValue(WeatherAlerts1179Ref) & " alerts in effect")
         If hs.DeviceValue(WeatherAlerts1179Ref) > 0 Is Nothing Then
             sayAlert("Last alert was "& hs.DeviceString(S1LastAlertMessage1355Ref))
         End If
@@ -39,7 +39,7 @@ Public Sub weatherStatus(ByVal delta As Object)
 
 End Sub
 
-Public Sub SayCurrentCondition(ByVal delta As Object)
+Public Function SayCurrentCondition()
     Dim label As String = "SayCurrentCondition"
     Dim cond As String = "unknown"
     try
@@ -153,7 +153,7 @@ Public Sub SayCurrentCondition(ByVal delta As Object)
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
-End Sub
+End Function
 
 Public Function windDirection(ByVal degrees As Object) As String
     Dim label As String = "windDirection"
