@@ -1,6 +1,6 @@
 ' See https://homeseer.com/support/homeseer/HS3/SDK/default.htm for API info
 ' See https://github.com/avatar42/MyMonitor for info on MyMonitor
-' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, wu, ssh and web which is the default
+' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, wu, ssh, cnt, humidity, plug, pressure, rssi, temp and web which is the default
 Sub createMonDev(ByVal parms As Object)
     Dim args() As String = Split(parms, ",")
     Dim label As String = "createMonDev"
@@ -56,6 +56,8 @@ Public Sub fixMonDev(ByVal parms As Object)
                 dv.Image(hs) = "/images/blueiris/ptzcam.png"
             Else if String.Equals(typeStr,"tivo") Then
                 dv.Image(hs) = "/images/hspi_ultramon3/tivo_online.png"
+            Else if String.Equals(typeStr,"plug") Then
+                dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
             Else
                 dv.Image(hs) = "/images/HomeSeer/status/armed-away_small.png"
             End If
@@ -99,18 +101,41 @@ Public Sub fixMonDev(ByVal parms As Object)
                 GenSingleStatus(dvRef,8,"Temp Full","/images/hspi_ultranetatmo3/battery_full.png")
                 GenSingleStatus(dvRef,9,"No Signal","/images/blueiris/red.png")
                 GenSingleStatus(dvRef,10,"Disabled","/images/blueiris/disabled.png")
-                GenSingleStatus(dvRef,11,"Disabled","/images/blueiris/yellow.png")
-            Else if String.Equals(typeStr,"tivo") Then
+                GenSingleStatus(dvRef, 11, "Low fps", "/images/blueiris/yellow.png")
+            Else if String.Equals(typeStr,"cnt") Then
+            ' just use value
+            Else if String.Equals(typeStr,"humidity") Then
+                GenRangeCtl( dvRef, 0, 100,"",1,""," %")
+                GenRangeStatusValue(dvRef, 0, 100, "/images/hspi_ultranetatmo3/humidity.png")
+            Else if String.Equals(typeStr,"plug") Then
+                GenSingleStatus(dvRef,0,"Off","	/images/HomeSeer/status/off.gif")
+                GenSingleStatus(dvRef,50,"Offline","/images/HomeSeer/status/unknown.png")
+                GenSingleStatus(dvRef,100,"On","/images/HomeSeer/status/on.gif")
+            Else if String.Equals(typeStr,"pressure") Then
+                GenRangeCtl( dvRef, 0, 1084,"",1,""," inHg")
+                GenRangeStatusValue(dvRef, 0, 100, "/images/hspi_ultranetatmo3/pressure.png")
+            Else if String.Equals(typeStr,"rssi") Then
+                GenRangeCtl( dvRef, -100, 0,"",0,""," db")
+                GenRangeStatusValue(dvRef, -100, -90, "/images/hspi_ultranetatmo3/signal_low.png")
+                GenRangeStatusValue(dvRef, -89, -70, "/images/hspi_ultranetatmo3/signal_medium.png")
+                GenRangeStatusValue(dvRef, -69, -25, "/images/hspi_ultranetatmo3/signal_high.png")
+                GenRangeStatusValue(dvRef, -24, -1, "/images/hspi_ultranetatmo3/signal_full.png")
+                GenSingleStatusValue(dvRef, 0, "/images/HomeSeer/status/unknown.png")
+            Else if String.Equals(typeStr,"temp") Then
+                GenRangeCtl( dvRef, -10, 120,"",1,""," °F")
+                GenRangeStatusValue(dvRef, -10, 120, "/images/hspi_ultranetatmo3/temperature.png")
+            ElseIf String.Equals(typeStr,"tivo") Then
                 GenSingleStatus(dvRef,0,"Offline","/images/hspi_ultramon3/tivo_offline.png")
-                GenRangeStatus(dvRef,1,199,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png")
+                GenRangeStatus(dvRef,1,199,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png",0,"","")
                 GenSingleStatus(dvRef,200,"Online-OK","/images/hspi_ultramon3/tivo_online.png")
-                GenRangeStatus(dvRef,201,999,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png")
+                GenRangeStatus(dvRef,201,999,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png",0,"","")
             Else
-                GenSingleStatus(dvRef,0,"Offline","/images/HomeSeer/status/modeoff.png")
-                GenRangeStatus(dvRef,1,199,"Other-Error","/images/HomeSeer/status/alarm.png")
+                GenRangeCtl( dvRef, 0, 999,"",0,"","")
+                GenSingleStatusValue(dvRef,0,"/images/HomeSeer/status/modeoff.png")
+                GenRangeStatusValue(dvRef,1,199,"/images/HomeSeer/status/alarm.png")
                 ' web response codes and custom errors
-                GenSingleStatus(dvRef,200,"Online-OK","/images/HomeSeer/status/ok_small.png")
-                GenRangeStatus(dvRef,300,999,"Online-Error","/images/HomeSeer/status/alarmco.png")
+                GenSingleStatusValue(dvRef,200,"/images/HomeSeer/status/ok_small.png")
+                GenRangeStatusValue(dvRef,300,999,"/images/HomeSeer/status/alarmco.png")
             End If
             
 
@@ -124,7 +149,7 @@ Public Sub fixMonDev(ByVal parms As Object)
             Dim DT As New DeviceTypeInfo
             DT.Device_API = DeviceTypeInfo.eDeviceAPI.No_API
             DT.Device_SubType = 0
-            DT.Device_SubType_Description = "MyMonitor"
+            DT.Device_SubType_Description = "" '"MyMonitor"
             dv.DeviceType_Set(hs) = DT
 
             ' TODO make device types work
@@ -148,41 +173,67 @@ End Sub
 Public Sub GenSingleStatus(ByVal dvRef As Integer,ByVal val As Integer,ByVal status As String,ByVal image As String)
     ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vspair.htm
     Dim Pair As VSPair
-    ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vgpair.htm
-    Dim GPair As VGPair
     ' want ePairStatusControl.Both so can change via URL
     Pair = New VSPair(HomeSeerAPI.ePairStatusControl.Both)
     Pair.PairType = VSVGPairType.SingleValue
     Pair.Value = val
     Pair.Status = status
+    Pair.Render = Enums.CAPIControlType.Button
+    Pair.Render_Location.Row = 1
+    Pair.Render_Location.Column = 1
+    'Pair.ControlUse = ePairControlUse._Off
     hs.DeviceVSP_AddPair(dvRef, Pair)
 
-    If image <> "" Then
-        GPair = New VGPair
-        GPair.PairType = VSVGPairType.SingleValue
-        GPair.Set_Value = val
-        GPair.Graphic = image
-        hs.DeviceVGP_AddPair(dvRef, GPair)
-    End If
+    GenSingleStatusValue(dvRef, val, image)
 End Sub
 
-Public Sub GenRangeStatus(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal status As String,ByVal image As String)
+Public Sub GenRangeStatus(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal status As String,ByVal image As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
+    
+    GenRangeCtl(dvRef, rangeStart, rangeEnd, status, decimals,prefix,suffix)  
+
+    GenRangeStatusValue(dvRef, rangeStart, rangeEnd, image)
+End Sub
+
+Public Sub GenRangeCtl(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal status As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
     Dim Pair As VSPair
-    Dim GPair As VGPair
     ' want ePairStatusControl.Both so can change via URL
     Pair = New VSPair(HomeSeerAPI.ePairStatusControl.Both)
     Pair.PairType = VSVGPairType.Range
     Pair.RangeStart = rangeStart
     Pair.RangeEnd = rangeEnd
-    Pair.RangeStatusDecimals=0 'default is 0 (integers only)
+    Pair.RangeStatusDecimals=decimals 'default is 0 (integers only)
+    Pair.Render = Enums.CAPIControlType.TextBox_Number
+    Pair.Render_Location.Row = 1
+    Pair.Render_Location.Column = 1
+    Pair.RangeStatusPrefix = prefix
+    Pair.RangeStatusSuffix = suffix
+
     Pair.Status = status
     hs.DeviceVSP_AddPair(dvRef, Pair)
     
+End Sub
+
+Public Sub GenRangeStatusValue(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal image As String)
+    Dim GPair As VGPair
+
     If image <> "" Then
         GPair = New VGPair
         GPair.PairType = VSVGPairType.Range
         GPair.RangeStart = rangeStart
         GPair.RangeEnd = rangeEnd
+        GPair.Graphic = image
+        hs.DeviceVGP_AddPair(dvRef, GPair)
+    End If
+End Sub
+
+Public Sub GenSingleStatusValue(ByVal dvRef As Integer,ByVal val As Integer,ByVal image As String)
+    ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vgpair.htm
+    Dim GPair As VGPair
+
+    If image <> "" Then
+        GPair = New VGPair
+        GPair.PairType = VSVGPairType.SingleValue
+        GPair.Set_Value = val
         GPair.Graphic = image
         hs.DeviceVGP_AddPair(dvRef, GPair)
     End If
