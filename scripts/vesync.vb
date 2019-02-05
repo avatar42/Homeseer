@@ -37,6 +37,14 @@ Sub getDevices(ByVal cid As String)
     End Try
 End Sub
 
+Sub reset(ByVal cid As String)
+    Dim label = "reset"
+    sendOff(cid)
+    'system.threading.thread.sleep(60000)
+    hs.waitsecs(60)
+    sendOn(cid)
+End Sub
+
 Sub sendOn(ByVal cid As String)
     Dim label = "sendOn"
     Try
