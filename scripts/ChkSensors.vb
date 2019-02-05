@@ -149,8 +149,9 @@ Public Sub chkSensors(unused As Object)
 End Sub
 
 ' unset noChkFlag on devices not in the filtered locations.
-' mainly used to get you started
-Public Sub initFlags(Parms As Object)
+' mainly used to get you started but also can be useful when adding a new plugin
+' if typeBase passed will set flag to check all devices of tyoe typeBase* 
+Public Sub initFlags(typeBase As Object)
     Dim label As String = "initFlags"
     Dim downDevs As Integer = 0
     Try
@@ -170,8 +171,10 @@ Public Sub initFlags(Parms As Object)
             If dv.MISC_Check(hs, noChkFlag) Then
                 ' If not in one of the filtered locations then force the noChkFlag off so checker will check
                 If isNotFiltered(dv) Then
-                    mark2Chk(dv)
-                    downDevs = downDevs + 1
+                    If typeBase is Nothing Or InStr(dv.Device_Type_String(Nothing), typeBase) > 0 Then
+                        mark2Chk(dv)
+                        downDevs = downDevs + 1
+                    End If
                 End If
             End If
         Loop Until EN.Finished
