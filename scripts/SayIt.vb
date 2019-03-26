@@ -20,13 +20,22 @@ Public Sub sayLog(ByVal parm As Object)
     sayString(parm & ". Check Homeseer log")
 End Sub
 
+Public Function betterName(ByVal name As Object) As String
+    Dim label = "betterName"
+    try
+    return name.Replace("." ," ").Replace("_pwr", " power").Replace("_", " ")
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+        return "unknown"
+    End Try
 
+End Function
 'Announce that device has changed to new value
 Public Sub sayValue(ByVal dvRef As Object)
     Dim dv
 
     dv = hs.GetDeviceByRef(dvRef)
-    sayString(dv.Name(Nothing) & " " & dv.devValue(Nothing))
+    sayString(betterName(dv.Name(Nothing)) & " " & dv.devValue(Nothing))
 End Sub
 
 'Announce that device has changed to new String value
@@ -34,7 +43,14 @@ Public Sub sayVString(ByVal dvRef As Object)
     Dim dv
 
     dv = hs.GetDeviceByRef(dvRef)
-    sayString(dv.Name(Nothing) & " " & dv.devString(Nothing))
+    sayString(betterName(dv.Name(Nothing)) & " " & dv.devString(Nothing))
+End Sub
+
+Public Sub sayWhyReset(ByVal dvRef As Object)
+    Dim dv
+
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString(betterName(dv.Name(Nothing)) & " is " & dv.devString(Nothing) & " . " & dv.devValue(Nothing) & " so doing a reset")
 End Sub
 
 Public Sub announce(ByVal parm As Object)
