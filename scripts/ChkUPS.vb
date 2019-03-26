@@ -28,7 +28,7 @@
                 If InStr(cat, "UPS") > 0  And InStr(dv.Device_Type_String(Nothing), "Status") > 0 Then
                     'hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & ":" & dv.Device_Type_String(Nothing) & " " & dv.Location(Nothing) & " (" & dv.Name(Nothing) & ")" & " (" & dv.devString(Nothing) & ")"  & " (" & dv.devValue(Nothing) & ")")
                     Dim status = dv.Name(Nothing) + dv.devString(Nothing)
-                    If InStr(status,"Disconnected") > 0 Or InStr(status,"REPLACE_BATTERY") > 0 Or InStr(status,"COMM_LOST") > 0 Then
+                    If InStr(status,"Disconnected") > 0 Or InStr(status,"REPLACE_BATTERY") > 0 Or InStr(status,"COMM_LOST") > 0 Or InStr(status,"LOW") > 0 Then
                         Dim attrs As String = ""
                         For i As Integer = 1 To 1048576
                             If dv.MISC_Check(hs, i) Then
