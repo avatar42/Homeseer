@@ -11,7 +11,9 @@ Dim offlineLoc = "offline"
 Public Function isNotFiltered(ByVal dv As Scheduler.Classes.DeviceClass) As Boolean
     Dim cat = dv.Location2(Nothing)
     Dim rm = dv.Location(Nothing)
-    Return InStr(cat, "NoData") = 0 And InStr(cat, "Root") = 0 And InStr(cat, "Counters-Timers") = 0 And InStr(rm, "Remove") = 0 And InStr(cat, "UnusedValues") = 0 And InStr(cat, "UPS") = 0 And InStr(rm, "UltraWeatherWU3 Plugin") = 0
+    Dim dtype = dv.Device_Type_String(Nothing)
+    
+    Return InStr(cat, "NoData") = 0 And InStr(cat, "Root") = 0 And InStr(cat, "Counters-Timers") = 0 And InStr(rm, "Remove") = 0 And InStr(cat, "UnusedValues") = 0 And InStr(cat, "UPS") = 0 And InStr(rm, "UltraWeatherWU3 Plugin") = 0 And InStr(dtype, "JowiHueGroup") = 0
 End Function
 
 ' true if device should be updated at least once every 24 hours
