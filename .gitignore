@@ -1,3 +1,7 @@
 scripts/contrib/
 scripts/Unused/
 scripts/Secrets.real.vb
+Tools/Class1.vb
+scripts/SymlinksDontWork.txt
+scripts/weatherXML_HSPhone.vb
+Data/Etekcity.json
