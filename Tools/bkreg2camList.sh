@@ -1,5 +1,5 @@
 rm -f cams.csv
-echo  host,shortname,dsname,fullxres,fullyres,HS3ref,vcodec,folder,enabled,group > cams.csv
+echo  host,shortname,dsname,fullxres,fullyres,HS3ref,vcodec,enabled,PTZ,Watchdog,folder,group > cams.csv
 set -x
 for host in BlueIris2 BlueIris3 BlueIris4 BlueIris5
 do
