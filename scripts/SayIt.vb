@@ -20,37 +20,68 @@ Public Sub sayLog(ByVal parm As Object)
     sayString(parm & ". Check Homeseer log")
 End Sub
 
-Public Function betterName(ByVal name As Object) As String
+'Get the best name to use for the device
+Public Function betterName(ByVal dv As Object) As String
     Dim label = "betterName"
+    Dim name = dv.VoiceCommand(Nothing)
     try
-    return name.Replace("." ," ").Replace("_pwr", " power").Replace("_", " ")
+        hs.WriteLog(label, "VoiceCommand: '" & name & "'")
+        If String.IsNullOrEmpty(name) Then
+            name = dv.Name(Nothing)
+            name.Replace("." ," ").Replace("_pwr", " power").Replace("_", " ")
+        End If
+        hs.WriteLog(label, "name: '" & name & "'")
+        return name
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
         return "unknown"
     End Try
 
 End Function
+
+' Look at the display options for a value and ge the one that probably sounds best in speech interface
+Public Function betterValue(ByVal dv As Object) As String
+    Dim label = "betterValue"
+    Dim val = dv.devString(Nothing)
+    try
+        hs.WriteLog(label, "devString: '" & val & "'")
+        If String.IsNullOrEmpty(val) Then
+            val = hs.CapiGetStatus(dv.Ref(Nothing)).Status
+        End If
+        hs.WriteLog(label, "val: '" & val & "'")
+        If String.IsNullOrEmpty(val) Then
+            val = dv.devValue(Nothing)
+        End If
+        hs.WriteLog(label, "val: '" & val & "'")
+        return val
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+        return "unknown"
+    End Try
+
+End Function
+
 'Announce that device has changed to new value
 Public Sub sayValue(ByVal dvRef As Object)
-    Dim dv
-
-    dv = hs.GetDeviceByRef(dvRef)
-    sayString(betterName(dv.Name(Nothing)) & " " & dv.devValue(Nothing))
+    Dim dv = hs.GetDeviceByRef(dvRef)
+    sayString(betterName(dv) & " " & dv.devValue(Nothing))
 End Sub
 
 'Announce that device has changed to new String value
 Public Sub sayVString(ByVal dvRef As Object)
-    Dim dv
+    Dim dv = hs.GetDeviceByRef(dvRef)
+    sayString(betterName(dv) & " " & dv.devString(Nothing))
+End Sub
 
-    dv = hs.GetDeviceByRef(dvRef)
-    sayString(betterName(dv.Name(Nothing)) & " " & dv.devString(Nothing))
+' Say the name and status of a device
+Public Sub sayStatus(ByVal dvRef As Object)
+    Dim dv = hs.GetDeviceByRef(dvRef)
+    sayString(betterName(dv) & " is " & betterValue(dv))
 End Sub
 
 Public Sub sayWhyReset(ByVal dvRef As Object)
-    Dim dv
-
-    dv = hs.GetDeviceByRef(dvRef)
-    sayString(betterName(dv.Name(Nothing)) & " is " & dv.devString(Nothing) & " . " & dv.devValue(Nothing) & " so doing a reset")
+    Dim dv = hs.GetDeviceByRef(dvRef)
+    sayString(betterName(dv) & " is " & betterValue(dv) & " so doing a reset")
 End Sub
 
 Public Sub announce(ByVal parm As Object)
