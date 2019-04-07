@@ -10,44 +10,64 @@
 Dim TRIGGER As String = "trigger"
 Dim SHOW As String = "show"
 
+Dim port2 = 8078
+Dim port3 = 8076
+Dim port4 = 8077
+Dim port5 = 8075
+
+Public Sub Main(ByVal parms As String)
+    hs.WriteLog("Main", "parms:" & parms)
+End Sub
+
 ' convenience methods for calling camShow(ByVal host As String, ByVal port As integer,ByVal parms As String)
 ' see camShow
 Public Sub Iris2Show(ByVal parms As String)
-    camShow("Iris2",8078,parms)
+    camShow("Iris2",port2,parms)
 End Sub
 
 ' see camShow
 Public Sub Iris3Show(ByVal parms As String)
-    camShow("Iris3",8076,parms)
+    camShow("Iris3",port3,parms)
 End Sub
 
 ' see camShow
 Public Sub Iris4Show(ByVal parms As String)
-    camShow("Iris4",8077,parms)
+    camShow("Iris4",port4,parms)
+End Sub
+
+' see camShow
+Public Sub Iris5Show(ByVal parms As String)
+    camShow("Iris5",port5,parms)
 End Sub
 
 ' Set all consoles back to All cameras
 Public Sub consoleClear(ByVal notUsed As String)
-    callBI("Iris2","All cameras",8078,SHOW)
-    callBI("Iris3","All cameras",8076,SHOW)
-    callBI("Iris4","All cameras",8077,SHOW)
+    callBI("Iris2","All cameras",port2,SHOW)
+    callBI("Iris3","All cameras",port3,SHOW)
+    callBI("Iris4","All cameras",port4,SHOW)
+    callBI("Iris5","All cameras",port5,SHOW)
     hs.SetDeviceString(Focusedcam4720Ref,"All consoles cleared",TRUE)
     hs.SetDeviceValueByRef(Focusedcam4720Ref, 0, TRUE)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris2Clear(ByVal notUsed As String)
-    callBI("Iris2","All cameras",8078,SHOW)
+    callBI("Iris2","All cameras",port2,SHOW)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris3Clear(ByVal notUsed As String)
-    callBI("Iris3","All cameras",8076,SHOW)
+    callBI("Iris3","All cameras",port3,SHOW)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris4Clear(ByVal notUsed As String)
-    callBI("Iris4","All cameras",8077,SHOW)
+    callBI("Iris4","All cameras",port4,SHOW)
+End Sub
+
+' Set console back to All cameras
+Public Sub Iris5Clear(ByVal notUsed As String)
+    callBI("Iris5","All cameras",port5,SHOW)
 End Sub
 
 ' Triggers an alert on camName And highlights the group / switches main video based on the following
@@ -85,6 +105,10 @@ Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As St
             ' switch video distribution to Blue Iris 4 console (input 4)
             hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 4, TRUE)
             hs.TimerReset("Iris4_motion_delay")
+        Else If (Instr(host,"Iris5") > 0) Then 
+            ' switch video distribution to Blue Iris 4 console (input 4)
+            hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 5, TRUE)
+            hs.TimerReset("Iris5_motion_delay")
         End If
     
     End If
@@ -120,6 +144,8 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
                         hs.SetDeviceValueByRef(Focusedcam4720Ref, 3, TRUE)
                     Else If (Instr(host,"Iris4") > 0) Then 
                         hs.SetDeviceValueByRef(Focusedcam4720Ref, 4, TRUE)
+                    Else If (Instr(host,"Iris5") > 0) Then 
+                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 5, TRUE)
                     Else
                         hs.SetDeviceValueByRef(Focusedcam4720Ref, 1, TRUE)
                     End If
