@@ -39,7 +39,7 @@ Public Sub checkWMI(ByVal host As Object)
                             sayValue(dv.Ref(Nothing))
                         End If
                     Else if (InStr(name, "Log Size") > 0)
-                        if (val > 10)
+                        if (val > 30)
                             sayValue(dv.Ref(Nothing))
                         End If
                     Else if (InStr(name, "Updates") > 0)
