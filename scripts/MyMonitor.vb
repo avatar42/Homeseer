@@ -2,6 +2,7 @@
 ' See https://github.com/avatar42/MyMonitor for info on MyMonitor
 ' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, wu, ssh, cnt, humidity, plug, pressure, rssi, temp and web which is the default
 Sub createMonDev(ByVal parms As Object)
+    Dim dv As Scheduler.Classes.DeviceClass = Nothing
     Dim args() As String = Split(parms, ",")
     Dim label As String = "createMonDev"
     Dim name As String = "MyMonitorNew"
@@ -20,6 +21,9 @@ Sub createMonDev(ByVal parms As Object)
         dvRef = hs.NewDeviceRef(name)
         hs.WriteLog(label,"Created:" & dvRef)
         fixMonDev(dvRef & "," & typeStr)
+        dv = hs.GetDeviceByRef(dvRef)
+        ' make easy to find in case there is one left over of a diff type
+        dv.Location2(hs) = typeStr
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
@@ -50,6 +54,7 @@ Public Sub fixMonDev(ByVal parms As Object)
             dv.Last_Change(hs) = Now
             hs.SetDeviceValueByRef(dvRef, 0, TRUE)
             hs.SetDeviceString(dvRef,"",TRUE)
+            dv.Location(hs) = "MyMonitor" ' Room in my system
             if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
                 dv.Image(hs) = "/images/blueiris/fixedcam.png"
             Else if String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
@@ -58,12 +63,19 @@ Public Sub fixMonDev(ByVal parms As Object)
                 dv.Image(hs) = "/images/hspi_ultramon3/tivo_online.png"
             Else if String.Equals(typeStr,"plug") Then
                 dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
+                dv.Location2(hs) = "Power" ' Category in my system
+            Else if String.Equals(typeStr,"cnt") Then
+                dv.Image(hs) = "/images/HomeSeer/status/counters_small.png"
             Else
                 dv.Image(hs) = "/images/HomeSeer/status/armed-away_small.png"
             End If
 
-            dv.Location(hs) = "MyMonitor" ' Room in my system
-            dv.Location2(hs) = "MyMonitor" ' Category in my system
+            if String.Equals(typeStr,"plug") Then
+                dv.Location2(hs) = "Power" 
+            Else
+                dv.Location2(hs) = "MyMonitor" 
+            End If
+
             hs.WriteLog(label,"Updated Location:" & dv.Location(hs) & ":" & dv.Location2(hs))
 
             'for child ref in X10 world this would be like A1 in Z-wave Q24
@@ -103,7 +115,22 @@ Public Sub fixMonDev(ByVal parms As Object)
                 GenSingleStatus(dvRef,10,"Disabled","/images/blueiris/disabled.png")
                 GenSingleStatus(dvRef, 11, "Low fps", "/images/blueiris/yellow.png")
             Else if String.Equals(typeStr,"cnt") Then
-            ' just use value
+                GenRangeCtl( dvRef, 0, 10000,"",4,"","  μg/m3")
+                ' pm2.5 0, 50, 100, 150, 200, 300
+                GenRangeStatusValue(dvRef, 0, 12, "/images/hspi_ultranetatmo3/green.png")
+                GenRangeStatusValue(dvRef, 12.001, 35.4999, "/images/Nest/cool.png")
+                GenRangeStatusValue(dvRef, 35.5, 55.4999, "/images/Nest/warning.png")
+                GenRangeStatusValue(dvRef, 55.5, 150.4999, "/images/Nest/emergency.png")
+                GenRangeStatusValue(dvRef, 150.5, 250.4999, "/images/hspi_ultranetatmo3/red.png")
+                GenRangeStatusValue(dvRef, 250.5, 10000, "/images/hspi_ultranetatmo3/flag_red.png")
+
+                ' pm10.0 0, 50, 100, 150, 200, 300
+                'GenRangeStatusValue(dvRef, 0, 54.999, "/images/hspi_ultranetatmo3/green.png")'0
+                'GenRangeStatusValue(dvRef, 55, 154.999, "/images/Nest/cool.png")'50
+                'GenRangeStatusValue(dvRef, 150, 254.999, "/images/Nest/warning.png")'100
+                'GenRangeStatusValue(dvRef, 255, 354.999, "/images/Nest/emergency.png")'150
+                'GenRangeStatusValue(dvRef, 355, 424.999, "/images/hspi_ultranetatmo3/red.png")'200
+                'GenRangeStatusValue(dvRef, 425, 10000, "/images/hspi_ultranetatmo3/flag_red.png")'300
             Else if String.Equals(typeStr,"humidity") Then
                 GenRangeCtl( dvRef, 0, 100,"",1,""," %")
                 GenRangeStatusValue(dvRef, 0, 100, "/images/hspi_ultranetatmo3/humidity.png")
@@ -170,7 +197,7 @@ Public Sub fixMonDev(ByVal parms As Object)
 
 End Sub
 
-Public Sub GenSingleStatus(ByVal dvRef As Integer,ByVal val As Integer,ByVal status As String,ByVal image As String)
+Public Sub GenSingleStatus(ByVal dvRef As Integer,ByVal val As Double,ByVal status As String,ByVal image As String)
     ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vspair.htm
     Dim Pair As VSPair
     ' want ePairStatusControl.Both so can change via URL
@@ -187,14 +214,14 @@ Public Sub GenSingleStatus(ByVal dvRef As Integer,ByVal val As Integer,ByVal sta
     GenSingleStatusValue(dvRef, val, image)
 End Sub
 
-Public Sub GenRangeStatus(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal status As String,ByVal image As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
+Public Sub GenRangeStatus(ByVal dvRef As Integer,ByVal rangeStart As Double,ByVal rangeEnd As Double,ByVal status As String,ByVal image As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
     
     GenRangeCtl(dvRef, rangeStart, rangeEnd, status, decimals,prefix,suffix)  
 
     GenRangeStatusValue(dvRef, rangeStart, rangeEnd, image)
 End Sub
 
-Public Sub GenRangeCtl(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal status As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
+Public Sub GenRangeCtl(ByVal dvRef As Integer,ByVal rangeStart As Double,ByVal rangeEnd As Double,ByVal status As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
     Dim Pair As VSPair
     ' want ePairStatusControl.Both so can change via URL
     Pair = New VSPair(HomeSeerAPI.ePairStatusControl.Both)
@@ -213,7 +240,7 @@ Public Sub GenRangeCtl(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal 
     
 End Sub
 
-Public Sub GenRangeStatusValue(ByVal dvRef As Integer,ByVal rangeStart As Integer,ByVal rangeEnd As Integer,ByVal image As String)
+Public Sub GenRangeStatusValue(ByVal dvRef As Integer,ByVal rangeStart As Double,ByVal rangeEnd As Double,ByVal image As String)
     Dim GPair As VGPair
 
     If image <> "" Then
@@ -226,7 +253,7 @@ Public Sub GenRangeStatusValue(ByVal dvRef As Integer,ByVal rangeStart As Intege
     End If
 End Sub
 
-Public Sub GenSingleStatusValue(ByVal dvRef As Integer,ByVal val As Integer,ByVal image As String)
+Public Sub GenSingleStatusValue(ByVal dvRef As Integer,ByVal val As Double,ByVal image As String)
     ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vgpair.htm
     Dim GPair As VGPair
 
