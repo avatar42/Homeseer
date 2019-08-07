@@ -33,9 +33,11 @@ Function ref2params(ByVal params As Object) As String
     Else
         Dim dv
         Dim cat
+        Dim name
 
         dv = hs.GetDeviceByRef(params)
         cat = dv.Location2(Nothing)
+        name = betterName(dv)
         hs.WriteLog("ref2params", "devString:(" & dv.devValue(Nothing) & ")")
         if String.IsNullOrEmpty(dv.devString(Nothing)) Then
             if (Partition14702Ref = params) Then
@@ -82,24 +84,23 @@ Function ref2params(ByVal params As Object) As String
                         Case Else
                             cond = "Error"
                     End Select
-                    return "" & dv.Name(Nothing) & " # " & cond
+                    return "" & name & " # " & cond
                 Catch ex As Exception
                     hs.WriteLog("Error", "Exception in script ref2params:  " & ex.Message)
                 End Try
             Else if (InStr(cat, "Temperature") > 0) Then
                 'hs.WriteLog("ref2params", "InStr(cat, Temperature) > 0")
-                Dim 
-                return "" & dv.Name(Nothing) & " is " & dv.devValue(Nothing) & "degrees"
+                return "" & name & " is " & dv.devValue(Nothing) & "degrees"
             Else if (dv.devValue(Nothing) > 0) Then
                 'hs.WriteLog("ref2params", "dv.devValue(Nothing) > 0")
-                return "" & dv.Name(Nothing) & " # Open"
+                return "" & name & " # Open"
             Else
                 'hs.WriteLog("ref2params", "dv.devValue(Nothing) <= 0")
-                return "" & dv.Name(Nothing) & " # Closed"
+                return "" & name & " # Closed"
             End if
         Else 
             'hs.WriteLog("ref2params", "!String.IsNullOrEmpty(dv.devString(Nothing))")
-            return "" & dv.Name(Nothing) & " # " & dv.devString(Nothing).Replace("*","")
+            return "" & name & " # " & dv.devString(Nothing).Replace("*","")
         End If
         
     End If
