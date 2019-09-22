@@ -43,6 +43,17 @@
                         downDevs = downDevs + 1
                     End If
                 End If
+                If InStr(cat, "UPS") > 0  And InStr(dv.Device_Type_String(Nothing), "Timestamp") > 0 Then
+
+                    Dim lastChg As DateTime = dv.Last_Change(Nothing)
+                    Dim span = now - lastChg
+                     If InStr(dv.Name(Nothing),"Last Updated") > 0 And span.TotalHours > 1 Then
+                        hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & " " & dv.Location(Nothing) & " " & dv.Name(Nothing) & " with value:" & dv.devValue(Nothing) & " updated:" & dv.Last_Change(Nothing))
+                        sayString("U P S on " & loc & " is down.")
+                        downDevs = downDevs + 1
+                    End If
+
+                End If
             Loop Until EN.Finished
             if downDevs > 0 Then
                 hs.TriggerEvent("Pink - Homeseer error")
