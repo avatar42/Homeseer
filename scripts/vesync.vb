@@ -8,8 +8,12 @@ Imports Newtonsoft.Json.Linq
 ' import VesyncUsername & VesyncPasswordAsMD5 defs
 #Include Secrets.vb
 
+'load object refs and speech methods
+#Include SayIt.vb
+
 ' Note there is a lot more logging in here than is really needed to make sorting issues easier. Set the following to false to turn off extra logging
-Dim debug As boolean = false
+Dim debug As Boolean = True
+Dim currentFirmVersion = "2.123"
 
 Const BASE_URL As String = "https://smartapi.vesync.com"
 
@@ -18,23 +22,163 @@ Const BASE_URL As String = "https://smartapi.vesync.com"
 ' Response: [{"deviceName":"ipcam9_pwr","deviceImg":"https://smartapi.vesync.com/v1/app/imgs/wifi/outlet/smart_wifi_outlet.png",
 ' "cid":"73522109-3df5-4428-9194-8d320dcfabe2","deviceStatus":"on","connectionType":"wifi","connectionStatus":"online","deviceType":"wifi-switch-1.3",
 ' "model":"wifi-switch","currentFirmVersion":"1.95"}, (repeated for each switch)]
-Sub getDevices(ByVal cid As String)
+Sub getDevices(ByVal unused As String)
     Dim label = "getDevices"
 
     Try
-        Dim rtn As JArray = Nothing
+        Dim rtn As JArray = getDevicesInfo()
+        'hs.WriteLog(label, "ResponseP: " & rtn.ToString)
+
+        For Each item As JObject In rtn
+            logDebug(label, "Device: " & item.ToString)
+            logDebug(label, "deviceName: " & item("deviceName").ToString)
+            logDebug(label, "deviceAddr: " & item("cid").ToString)
+            logDebug(label, "deviceStatus: " & item("deviceStatus").ToString)
+            logDebug(label, "connectionStatus: " & item("connectionStatus").ToString)
+            logDebug(label, "currentFirmVersion: " & item("currentFirmVersion").ToString)
+        Next
+
+    Catch ex As Exception
+        hs.WriteLog("Error", "Error: " & ex.ToString())
+    End Try
+End Sub
+
+' Find all the Etekcity plugs with matching names and update their addresses, location2, image, stauts string and status value as needed.
+Public Sub fixDevices(ByVal unused As String)
+    Dim label As String = "fixDevices"
+    Dim typeStr As String = "MyMonitor-plug"
+    Dim downDevs As Integer = 0
+    Dim writeChg = True
+    Try
+        Dim rtn As JArray = getDevicesInfo()
+        Dim dv As Scheduler.Classes.DeviceClass
+        Dim EN As Scheduler.Classes.clsDeviceEnumeration = hs.GetDeviceEnumerator  'Get all devices
+        If EN Is Nothing Then
+            hs.WriteLog(label, "Error getting Enumerator")
+            Exit Sub
+        End If
+        Do  'check each device that was enumerated
+            dv = EN.GetNext
+            If dv Is Nothing Then  'No device, so quit
+                hs.WriteLog(label, "No devices found")
+                Exit Sub
+            End If
+            ' offline and of type
+            Dim objName = dv.Name(Nothing)
+            If InStr(objName, "Etekcity.") > 0 Then
+                Dim devName = Right(objName, Len(objName) - 9)
+                Dim chgd = 0
+                Dim bak = "" & dv.Location(Nothing) & "." & dv.Location2(Nothing) & "." & dv.Name(Nothing) & " value:" & dv.devValue(Nothing) & " Address:" & dv.Address(Nothing) & " firmware:" & dv.devString(Nothing) & " type:" & dv.Device_Type_String(Nothing)
+                For Each item As JObject In rtn
+                    If StrComp(dv.Location2(Nothing), "Remove", 0) <> 0 And (StrComp(devName, item("deviceName").ToString, 0) = 0 Or StrComp(dv.Address(Nothing), item("cid").ToString, 0) = 0) Then
+                        If StrComp(devName, item("deviceName").ToString, 0) <> 0 Then
+                            logDebug(label, "devName:" & devName & "->" & item("deviceName").ToString & "<")
+                            If writeChg Then
+                                dv.Name(hs) = "Etekcity." & item("deviceName").ToString
+                            End If
+                            chgd = chgd + 1
+                        End If
+                        If StrComp(dv.Image(Nothing), "/images/Devices/Etekcity_small.jpg", 0) <> 0 Then
+                            logDebug(label, "Image:" & dv.Image(Nothing) & "->/images/Devices/Etekcity_small.jpg")
+                            If writeChg Then
+                                dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
+                            End If
+                            chgd = chgd + 64
+                        End If
+                        If StrComp(dv.Location2(Nothing), "Power", 0) <> 0 Then
+                            logDebug(label, "Location2:" & dv.Location2(Nothing) & "->Power")
+                            If writeChg Then
+                                dv.Location2(hs) = "Power"
+                            End If
+                            chgd = chgd + 2
+                        End If
+                        If StrComp(dv.Address(Nothing), item("cid").ToString, 0) <> 0 Then
+                            logDebug(label, "Address:" & dv.Address(Nothing) & "->" & item("cid").ToString)
+                            If writeChg Then
+                                dv.Address(hs) = item("cid").ToString
+                            End If
+                            chgd = chgd + 4
+                        End If
+                        Dim status = 50
+                        If StrComp("online", item("connectionStatus").ToString, 0) = 0 Then
+                            If StrComp("on", item("deviceStatus").ToString, 0) = 0 Then
+                                status = 100
+                            Else
+                                status = 0
+                            End If
+                        End If
+                        If dv.devValue(Nothing) <> status Then
+                            logDebug(label, "devValue:" & dv.devValue(Nothing) & "->" & status)
+                            ' uncomment to set the HS value to match the server value
+                            If writeChg Then
+                                dv.devValue(hs) = status
+                            End If
+                            chgd = chgd + 8
+                        End If
+                        If StrComp(currentFirmVersion, item("currentFirmVersion").ToString, 0) <> 0 Then
+                            logDebug(label, "Attention:" & currentFirmVersion & "->" & item("currentFirmVersion").ToString)
+                            If writeChg Then
+                                dv.Attention(hs) = item("currentFirmVersion").ToString
+                            End If
+                            chgd = chgd + 16
+                        End If
+                        If StrComp(dv.Device_Type_String(Nothing), typeStr, 0) <> 0 Then
+                            logDebug(label, "Device_Type_String:" & dv.Device_Type_String(Nothing) & "->" & typeStr)
+                            If writeChg Then
+                                dv.Device_Type_String(hs) = typeStr
+                            End If
+                            chgd = chgd + 32
+                        End If
+                        Exit For
+                    End If
+                Next
+                If chgd > 0 Then
+                    dv.UserNote(hs) = bak
+                    downDevs = downDevs + 1
+                    logDebug(label, "Updated device " & dv.Location(hs) & "." & dv.Location2(hs) & "." & dv.Name(hs) & " value:" & dv.devValue(hs) & " Address:" & dv.Address(hs) & " firmware:" & dv.Attention(hs) & " type:" & dv.Device_Type_String(hs) & " chg:" & chgd)
+                End If
+            End If
+        Loop Until EN.Finished
+        Dim msg = " devices would be fixed."
+        If writeChg Then
+            msg = " devices are fixed."
+        End If
+        sayString("" & downDevs & msg)
+        logDebug(label, "" & downDevs & msg)
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+    End Try
+End Sub
+
+Function getDevicesInfo()
+    Dim label = "getDevicesInfo"
+    Dim rtn As JArray = Nothing
+
+    Try
         Dim respStr As String = sendCmd("/vold/user/devices", "GET")
         If (respStr Is Nothing) Then
             logDebug(label, "respStr: is Nothing")
         Else
             logDebug(label, "respStr: " & respStr)
-            rtn = JsonConvert.DeserializeObject(respStr)
-            hs.WriteLog(label, "Response: " & rtn.ToString)
+            'rtn = JsonConvert.DeserializeObject(respStr)
+            'hs.WriteLog(label, "ResponseD: " & rtn.ToString)
+
+            rtn = Newtonsoft.Json.Linq.JArray.Parse(respStr)
         End If
 
     Catch ex As Exception
         hs.WriteLog("Error", "Error: " & ex.ToString())
     End Try
+
+    Return rtn
+End Function
+
+Sub resetRef(ByVal dvRef As String)
+    Dim label = "resetRef"
+    Dim dv
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString("doing a reset of " & betterName(dv))
+    reset(dv.Address(Nothing))
 End Sub
 
 Sub reset(ByVal cid As String)
@@ -78,9 +222,9 @@ Sub sendOff(ByVal cid As String)
 End Sub
 
 Function logDebug(ByVal label As String, ByVal msg As String)
-  if (debug) Then
-    hs.WriteLog(label, msg)
-  End if
+    If (debug) Then
+        hs.WriteLog(label, msg)
+    End If
 End Function
 
 Function sendCmd(ByVal actionPath As String, ByVal method As String) As String
@@ -204,5 +348,3 @@ Function postLogin() As JObject
     End Try
     Return rtn
 End Function
-
-
