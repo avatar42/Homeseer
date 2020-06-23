@@ -1,4 +1,4 @@
-﻿'load object refs and speech methods
+'load object refs and speech methods
 #Include SayIt.vb
 ' import BlueIrisLogin def
 #Include Secrets.vb
@@ -7,8 +7,10 @@
 ' As in http://HS#IP:PORT/JSON?user=UserName&pass=Password&request=controldevicebyvalue&ref=RefID%&value=Value
 ' Though be sure the device you are trying to set the value on is set for control and can accept a value in the range you will be sending.
 
+' currently supported commands
 Dim TRIGGER As String = "trigger"
 Dim SHOW As String = "show"
+Dim PROFILE As String = "profile"
 
 Dim port2 = 8078
 Dim port3 = 8076
@@ -22,7 +24,7 @@ End Sub
 ' convenience methods for calling camShow(ByVal host As String, ByVal port As integer,ByVal parms As String)
 ' see camShow
 Public Sub Iris2Show(ByVal parms As String)
-    camShow("Iris2",port2,parms)
+    camShow("Iris6",port2,parms)
 End Sub
 
 ' see camShow
@@ -42,7 +44,7 @@ End Sub
 
 ' Set all consoles back to All cameras
 Public Sub consoleClear(ByVal notUsed As String)
-    callBI("Iris2","All cameras",port2,SHOW)
+    callBI("Iris6","All cameras",port2,SHOW)
     callBI("Iris3","All cameras",port3,SHOW)
     callBI("Iris4","All cameras",port4,SHOW)
     callBI("Iris5","All cameras",port5,SHOW)
@@ -52,7 +54,7 @@ End Sub
 
 ' Set console back to All cameras
 Public Sub Iris2Clear(ByVal notUsed As String)
-    callBI("Iris2","All cameras",port2,SHOW)
+    callBI("Iris6","All cameras",port2,SHOW)
 End Sub
 
 ' Set console back to All cameras
@@ -68,6 +70,11 @@ End Sub
 ' Set console back to All cameras
 Public Sub Iris5Clear(ByVal notUsed As String)
     callBI("Iris5","All cameras",port5,SHOW)
+End Sub
+
+' Set console back to All cameras
+Public Sub Iris4Profile(ByVal pid As String)
+    callBI("Iris4",pid,port4,PROFILE)
 End Sub
 
 ' Triggers an alert on camName And highlights the group / switches main video based on the following
@@ -93,7 +100,7 @@ Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As St
         callBI(host,grpName,port,SHOW)
     End If
     If hs.DeviceValue(Windfilter3864Ref) = 0 Or (Instr(switchNow,"Y") > 0) Then
-        If (Instr(host,"Iris2") > 0) Then
+        If (Instr(host,"Iris6") > 0) Then
         ' switch video distribution to Blue Iris 2 console (input 2)
             hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 2, TRUE)
             hs.TimerReset("Iris2_motion_delay")
@@ -133,12 +140,16 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
             page = hs.GetURL(host,"/admin?camera=" & ctlName & "&trigger" & BlueIrisLogin,TRUE,port)
             ' reset timer for host console
             hs.TimerReset(host & "_motion_delay")
+        Else If (Instr(command,PROFILE) > 0) Then 
+            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?profile=" & ctlName & BlueIrisLogin)
+            ' hs.GetURL(IP,URL,TRUE,port)
+            page = hs.GetURL(host,"/admin?profile=" & ctlName & BlueIrisLogin,TRUE,port)
         Else If (Instr(command,SHOW) > 0) Then 
             'hs.WriteLog(label, "ctlName:" & ctlName & " host:" & host & " switch before:" & hs.DeviceValue(CamSwitchInput4606Ref))
             Try
                 Try
                     hs.SetDeviceString(Focusedcam4720Ref,"Highlighting " & ctlName & " on " & host,TRUE)
-                    If (Instr(host,"Iris2") > 0) Then
+                    If (Instr(host,"Iris6") > 0) Then
                         hs.SetDeviceValueByRef(Focusedcam4720Ref, 2, TRUE)
                     Else If (Instr(host,"Iris3") > 0) Then 
                         hs.SetDeviceValueByRef(Focusedcam4720Ref, 3, TRUE)
