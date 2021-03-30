@@ -16,11 +16,11 @@ scripts/ListDevices.vb|Stores last ref ID, device count and a checksum so you ca
 scripts/MyMonitor.vb|methods for creating virtual devices to be used with MyMonitor
 scripts/Nest.vb|Some Nest convience methods
 scripts/PushBullet.vb|Methods for sending messages to Pushbullet as in if alarm set then Pushbullet else announce
-scripts/Refs.vb|Generated include of device refs I'm using in scripts.
 scripts/SayIt.vb|Make annuncements based on factors like alarm and debug levels.
-scripts/Secrets.vb|Where you want to put your login info for scripts to use.
-scripts/SpeakTemp.vb|Speak the name, temperature and last change time of a snesor.
+scripts/SpeakTemp.vb|Speak the name, temperature and last change time of a sensor.
 scripts/Weather.vb|Speak weather info converting wind direction and S1CurrentCondition from numbers to descriptions.
 scripts/index.vb|Used by reports/index.aspx
 reports/index.aspx|Folder index example
 scripts/vesync.vb|Control Vesync Etekcity plugs via their cloud API directly, bypassing the currently non working IFTTT interface.
+scripts/WMI.vb|Check WMI status object to see if they are out of range
+scripts/WMIObj.vb|Create WMI status objects for a host
