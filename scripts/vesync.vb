@@ -1,3 +1,4 @@
+' Not loading Newtonsoft on Linux HS3 or HS4. There might be a workaround I did not find but was simplier to rewrite in Java for me.
 Imports System.Web
 Imports System.Net
 Imports System.IO
@@ -5,18 +6,40 @@ Imports System.Text
 Imports Newtonsoft.Json
 Imports Newtonsoft.Json.Linq
 
-' import VesyncUsername & VesyncPasswordAsMD5 defs
-#Include Secrets.vb
-
-'load object refs and speech methods
-#Include SayIt.vb
-
 ' Note there is a lot more logging in here than is really needed to make sorting issues easier. Set the following to false to turn off extra logging
-Dim debug As Boolean = True
+Dim debug As Boolean = False
 Dim currentFirmVersion = "2.123"
 
 Const BASE_URL As String = "https://smartapi.vesync.com"
 
+Sub sayString(ByVal msg As String)
+    hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+Public Sub chkGlobal(ByVal name As String)
+    Dim s = hs.GetVar(name)
+    if s Is Nothing Then
+        sayString(name & " not set")
+        hs.WriteLog("Error", name & " not set correctly")
+    Else
+        sayString(name & " is defined")
+    End If
+End Sub
+
+Sub Main(ByVal ignored As String)
+    hs.speakEx(0, "Vesync script compiled OK", False)
+    chkGlobal("VesyncUsername")
+    chkGlobal("VesyncPasswordAsMD5")
+    debug = True
+    getDevices("")
+End Sub
+
+Function logDebug(ByVal label As String, ByVal msg As String)
+    If (debug) Then
+        hs.WriteLog(label, msg)
+    End If
+    return ""
+End Function
 
 ' Get device info from API server to be used by events to call sendOn and sendOff
 ' Response: [{"deviceName":"ipcam9_pwr","deviceImg":"https://smartapi.vesync.com/v1/app/imgs/wifi/outlet/smart_wifi_outlet.png",
@@ -111,7 +134,7 @@ Public Sub fixDevices(ByVal unused As String)
                             logDebug(label, "devValue:" & dv.devValue(Nothing) & "->" & status)
                             ' uncomment to set the HS value to match the server value
                             If writeChg Then
-                                dv.devValue(hs) = status
+                                hs.SetDeviceValueByRef(dv.ref(Nothing), status, True)
                             End If
                             chgd = chgd + 8
                         End If
@@ -181,6 +204,22 @@ Sub resetRef(ByVal dvRef As String)
     reset(dv.Address(Nothing))
 End Sub
 
+Sub sendOnRef(ByVal dvRef As String)
+    Dim label = "sendOnRef"
+    Dim dv
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString("Turning on " & betterName(dv))
+    sendOn(dv.Address(Nothing))
+End Sub
+
+Sub sendOffRef(ByVal dvRef As String)
+    Dim label = "sendOffRef"
+    Dim dv
+    dv = hs.GetDeviceByRef(dvRef)
+    sayString("Turning off " & betterName(dv))
+    sendOff(dv.Address(Nothing))
+End Sub
+
 Sub reset(ByVal cid As String)
     Dim label = "reset"
     sendOff(cid)
@@ -220,12 +259,6 @@ Sub sendOff(ByVal cid As String)
         hs.WriteLog("Error", "Error: " & ex.ToString())
     End Try
 End Sub
-
-Function logDebug(ByVal label As String, ByVal msg As String)
-    If (debug) Then
-        hs.WriteLog(label, msg)
-    End If
-End Function
 
 Function sendCmd(ByVal actionPath As String, ByVal method As String) As String
     Dim respJo As JObject
@@ -296,7 +329,7 @@ Function postLogin() As JObject
     Dim readStream As Stream
     Dim rtn As JObject = Nothing
     Dim label = "postLogin"
-    Dim postdata = "{""account"": """ & VesyncUsername & """,""devToken"": """",""password"": """ & VesyncPasswordAsMD5 & """}"
+    Dim postdata = "{""account"": """ & hs.GetVar("VesyncUsername") & """,""devToken"": """",""password"": """ & hs.GetVar("VesyncPasswordAsMD5") & """}"
     logDebug(label, "postdata:" & postdata)
 
     'Make the request to the API
@@ -347,4 +380,23 @@ Function postLogin() As JObject
         hs.WriteLog("Error", "Request was: " & postdata)
     End Try
     Return rtn
+End Function
+
+'Get the best name to use for the device
+Public Function betterName(ByVal dv As Object) As String
+    Dim label As Object = "betterName"
+    Dim name As Object = dv.VoiceCommand(Nothing)
+    Try
+        hs.WriteLog(label, "VoiceCommand: '" & name & "'")
+        If String.IsNullOrEmpty(name) Then
+            name = dv.Name(Nothing)
+            name.Replace(".", " ").Replace("_pwr", " power").Replace("_", " ")
+        End If
+        hs.WriteLog(label, "name: '" & name & "'")
+        Return name
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+        Return "unknown"
+    End Try
+
 End Function

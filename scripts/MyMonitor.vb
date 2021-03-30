@@ -1,6 +1,12 @@
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    hs.speakEx(0, "My Monitor Script compiled OK", False)
+End Sub
+
 ' See https://homeseer.com/support/homeseer/HS3/SDK/default.htm for API info
 ' See https://github.com/avatar42/MyMonitor for info on MyMonitor
-' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, wu, ssh, cnt, humidity, plug, pressure, rssi, temp and web which is the default
+' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, ssh, cnt, humidity, plug, pressure, rssi, 
+' temp and web which is the default
 Sub createMonDev(ByVal parms As Object)
     Dim dv As Scheduler.Classes.DeviceClass = Nothing
     Dim args() As String = Split(parms, ",")
@@ -55,25 +61,50 @@ Public Sub fixMonDev(ByVal parms As Object)
             hs.SetDeviceValueByRef(dvRef, 0, TRUE)
             hs.SetDeviceString(dvRef,"",TRUE)
             dv.Location(hs) = "MyMonitor" ' Room in my system
-            if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
+
+            ' set default thumbnail pic and category
+            dv.Location2(hs) = "MyMonitor" ' default
+            if String.Equals(typeStr,"battery") Then
+                dv.Location2(hs) = "Batteries" 
+                ' Uses pic of object battery is in
+            Else if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
                 dv.Image(hs) = "/images/blueiris/fixedcam.png"
+                dv.Location2(hs) = "BlueIris" 
             Else if String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
                 dv.Image(hs) = "/images/blueiris/ptzcam.png"
+                dv.Location2(hs) = "BlueIris" 
             Else if String.Equals(typeStr,"tivo") Then
                 dv.Image(hs) = "/images/hspi_ultramon3/tivo_online.png"
+                dv.Location2(hs) = "Tivo" 
             Else if String.Equals(typeStr,"plug") Then
                 dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
-                dv.Location2(hs) = "Power" ' Category in my system
+                dv.Location2(hs) = "Power" 
             Else if String.Equals(typeStr,"cnt") Then
                 dv.Image(hs) = "/images/HomeSeer/status/counters_small.png"
-            Else
-                dv.Image(hs) = "/images/HomeSeer/status/armed-away_small.png"
-            End If
-
-            if String.Equals(typeStr,"plug") Then
-                dv.Location2(hs) = "Power" 
-            Else
-                dv.Location2(hs) = "MyMonitor" 
+            Else if String.Equals(typeStr,"motion") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Motion" 
+            Else if String.Equals(typeStr,"pressure") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Pressure" 
+            Else if String.Equals(typeStr,"humidity") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Humidity" 
+            Else if String.Equals(typeStr,"rssi") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Signal" 
+            Else if String.Equals(typeStr,"solar") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Light" 
+            Else if String.Equals(typeStr,"temp") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Temperature" 
+            Else if String.Equals(typeStr,"wind") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Wind" 
+            Else if String.Equals(typeStr,"dir") Then
+                ' Uses pic of object is from
+                dv.Location2(hs) = "Wind" 
             End If
 
             hs.WriteLog(label,"Updated Location:" & dv.Location(hs) & ":" & dv.Location2(hs))
@@ -100,7 +131,18 @@ Public Sub fixMonDev(ByVal parms As Object)
             hs.DeviceVSP_ClearAll(dvRef, True)
             hs.DeviceVGP_ClearAll(dvRef, True)
 
-            if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Or String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
+            if String.Equals(typeStr,"battery") Then
+                GenRangeCtl( dvRef, 0, 100,"",4,"","%")
+                GenRangeCtl( dvRef, 101, 254,"",4,""," error")
+                GenSingleStatus(dvRef,255,"Battery Low Warning","/images/HomeSeer/status/battery_0.png")
+                GenRangeStatusValue(dvRef, 0, 3, "/images/HomeSeer/status/battery_0.png")
+                GenRangeStatusValue(dvRef, 4, 36, "/images/HomeSeer/status/battery_25.png")
+                GenRangeStatusValue(dvRef, 37, 64, "/images/HomeSeer/status/battery_50.png")
+                GenRangeStatusValue(dvRef, 65, 89, "/images/HomeSeer/status/battery_75.png")
+                GenRangeStatusValue(dvRef, 90, 100, "/images/HomeSeer/status/battery_100.png")
+                GenRangeStatusValue(dvRef, 101, 254, "/images/HomeSeer/status/battery_0.png")
+
+            else if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Or String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
                 GenSingleStatus(dvRef,0,"Offline","/images/HomeSeer/status/modeoff.png")
                 ' values set to mostly match match the Blue Iris plugin though it was inconsistent between fixed and PTZ cams
                 GenSingleStatus(dvRef,1,"Connected","/images/blueiris/green.png")
@@ -135,7 +177,7 @@ Public Sub fixMonDev(ByVal parms As Object)
                 GenRangeCtl( dvRef, 0, 100,"",1,""," %")
                 GenRangeStatusValue(dvRef, 0, 100, "/images/hspi_ultranetatmo3/humidity.png")
             Else if String.Equals(typeStr,"plug") Then
-                GenSingleStatus(dvRef,0,"Off","	/images/HomeSeer/status/off.gif")
+                GenSingleStatus(dvRef,0,"Off","/images/HomeSeer/status/off.gif")
                 GenSingleStatus(dvRef,50,"Offline","/images/HomeSeer/status/unknown.png")
                 GenSingleStatus(dvRef,100,"On","/images/HomeSeer/status/on.gif")
             Else if String.Equals(typeStr,"pressure") Then
@@ -156,7 +198,41 @@ Public Sub fixMonDev(ByVal parms As Object)
                 GenRangeStatus(dvRef,1,199,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png",0,"","")
                 GenSingleStatus(dvRef,200,"Online-OK","/images/hspi_ultramon3/tivo_online.png")
                 GenRangeStatus(dvRef,201,999,"Other-Error","/images/hspi_ultramon3/tivo_troubled.png",0,"","")
-            Else
+            ElseIf String.Equals(typeStr,"motion") Then
+            'Wireless Tag and Wyze
+                GenSingleStatus(dvRef,0,"Disarmed","/images/HomeSeer/status/autolocked.png")
+                GenSingleStatus(dvRef,1,"Armed","/images/HomeSeer/status/armed-stay.png")
+                GenSingleStatus(dvRef,2,"Moved","/images/HomeSeer/status/Garage-Opening.png")
+                GenSingleStatus(dvRef,3,"Opened","/images/HomeSeer/status/open.png")
+                GenSingleStatus(dvRef,4,"Closed","/images/HomeSeer/status/closed.png")
+                GenSingleStatus(dvRef,5,"DetectedMovement","/images/HomeSeer/status/motion.gif")
+                GenSingleStatus(dvRef,6,"TimedOut","/images/HomeSeer/status/unknown.png")
+
+            ElseIf String.Equals(typeStr,"rain") Then
+                 GenRangeStatus(dvRef,0,1000,"Rain","/images/hspi_ultraweatherwu3/rain.png",2,""," in")
+            ElseIf String.Equals(typeStr,"wind") Then
+                 GenRangeStatus(dvRef,0,250 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,""," mph")
+            ElseIf String.Equals(typeStr,"solar") Then
+                 GenRangeStatus(dvRef,0,2000 ,"","/images/HomeSeer/status/radiation.png",2,"","  W/m^2")
+            ElseIf String.Equals(typeStr,"dir") Then
+                 GenRangeStatus(dvRef,0,11.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"North ","")
+                 GenRangeStatus(dvRef,11.25,33.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"North-northeast ","")
+                 GenRangeStatus(dvRef,33.75,56.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"Northeast ","")
+                 GenRangeStatus(dvRef,56.25,78.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"East-northeast ","")
+                 GenRangeStatus(dvRef,78.25,101.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"East ","")
+                 GenRangeStatus(dvRef,101.25,123.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"East-southeast ","")
+                 GenRangeStatus(dvRef,123.75,146.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"Southeast ","")
+                 GenRangeStatus(dvRef,146.25,168.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"South-southeast ","")
+                 GenRangeStatus(dvRef,168.75,191.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"South ","")
+                 GenRangeStatus(dvRef,191.25,213.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"South-southwest ","")
+                 GenRangeStatus(dvRef,213.75,236.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"Southwest ","")
+                 GenRangeStatus(dvRef,236.25,258.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"West-southwest ","")
+                 GenRangeStatus(dvRef,258.75,281.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"West ","")
+                 GenRangeStatus(dvRef,281.25,303.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"West-northwest ","")
+                 GenRangeStatus(dvRef,303.75,326.24 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"Northwest ","")
+                 GenRangeStatus(dvRef,326.25,348.74 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"North-northwest ","")
+                 GenRangeStatus(dvRef,348.75,360 ,"Wind","/images/hspi_ultraweatherwu3/wind.png",2,"North ","")
+            Else ' web, ssh, wu
                 GenRangeCtl( dvRef, 0, 999,"",0,"","")
                 GenSingleStatusValue(dvRef,0,"/images/HomeSeer/status/modeoff.png")
                 GenRangeStatusValue(dvRef,1,199,"/images/HomeSeer/status/alarm.png")

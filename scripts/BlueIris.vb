@@ -1,8 +1,3 @@
-'load object refs and speech methods
-#Include SayIt.vb
-' import BlueIrisLogin def
-#Include Secrets.vb
-
 ' Note it is also possible to call URLs directly form Blue Iris to set device values in Homeseer
 ' As in http://HS#IP:PORT/JSON?user=UserName&pass=Password&request=controldevicebyvalue&ref=RefID%&value=Value
 ' Though be sure the device you are trying to set the value on is set for control and can accept a value in the range you will be sending.
@@ -17,8 +12,27 @@ Dim port3 = 8076
 Dim port4 = 8077
 Dim port5 = 8075
 
-Public Sub Main(ByVal parms As String)
-    hs.WriteLog("Main", "parms:" & parms)
+Sub sayString(ByVal msg As String)
+    hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+Public Sub sayGlobal(ByVal name As String)
+    hs.RunScriptFunc("SayIt.vb", "sayGlobal", name, False, False)
+End Sub
+
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("Blue Iris Script compiled OK")
+    Dim s = hs.GetVar("BlueIrisLogin")
+    if (InStr(s, "&pw=") > 0)
+        sayString("BlueIrisLogin is defined")
+    Else
+        sayString("BlueIrisLogin not set")
+        hs.WriteLog("Error", "BlueIrisLogin not set correctly")
+    End If
+    sayGlobal("FocusedcamRef")
+    sayGlobal("WindfilterRef")
+    sayGlobal("CamSwitchInputRef")
 End Sub
 
 ' convenience methods for calling camShow(ByVal host As String, ByVal port As integer,ByVal parms As String)
@@ -48,8 +62,8 @@ Public Sub consoleClear(ByVal notUsed As String)
     callBI("Iris3","All cameras",port3,SHOW)
     callBI("Iris4","All cameras",port4,SHOW)
     callBI("Iris5","All cameras",port5,SHOW)
-    hs.SetDeviceString(Focusedcam4720Ref,"All consoles cleared",TRUE)
-    hs.SetDeviceValueByRef(Focusedcam4720Ref, 0, TRUE)
+    hs.SetDeviceString(hs.GetVar("FocusedcamRef"), "All consoles cleared", True)
+    hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 0, True)
 End Sub
 
 ' Set console back to All cameras
@@ -84,10 +98,10 @@ End Sub
 ' where
 ' camName = the short name of the camera (or group) to trigger
 ' grpName = the group name of the cameras to bring forward on the console
-' highlight = Y means bring group forward even if Windfilter3864Ref = 1. N means bring group forward only if Windfilter3864Ref = 0
-' switchNow = Y means switch main video even if Windfilter3864Ref = 1. N means switch main video only if Windfilter3864Ref = 0
-' uses (Windfilter3864Ref) a flag for reducing highlighting during storms.
-' (CamSwitchInput4606Ref) control for PiP HDMI switch
+' highlight = Y means bring group forward even if WindfilterRef = 1. N means bring group forward only if WindfilterRef = 0
+' switchNow = Y means switch main video even if WindfilterRef = 1. N means switch main video only if WindfilterRef = 0
+' uses (WindfilterRef) a flag for reducing highlighting during storms.
+' (CamSwitchInputRef) control for PiP HDMI switch
 Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As String)
     Dim args() As String = Split(parms, ",")
     Dim camName As String = args(0)
@@ -96,28 +110,28 @@ Public Sub camShow(ByVal host As String, ByVal port As integer,ByVal parms As St
     Dim switchNow As String = args(3)
 
     callBI(host,camName,port,TRIGGER)
-    If hs.DeviceValue(Windfilter3864Ref) = 0 Or (Instr(highlight,"Y") > 0) Then
-        callBI(host,grpName,port,SHOW)
+    If hs.DeviceValue(hs.GetVar("WindfilterRef")) = 0 Or (Instr(highlight, "Y") > 0) Then
+        callBI(host, grpName, port, SHOW)
     End If
-    If hs.DeviceValue(Windfilter3864Ref) = 0 Or (Instr(switchNow,"Y") > 0) Then
-        If (Instr(host,"Iris6") > 0) Then
-        ' switch video distribution to Blue Iris 2 console (input 2)
-            hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 2, TRUE)
+    If hs.DeviceValue(hs.GetVar("WindfilterRef")) = 0 Or (Instr(switchNow, "Y") > 0) Then
+        If (Instr(host, "Iris6") > 0) Then
+            ' switch video distribution to Blue Iris 2 console (input 2)
+            hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 2, True)
             hs.TimerReset("Iris2_motion_delay")
-        Else If (Instr(host,"Iris3") > 0) Then 
+        ElseIf (Instr(host, "Iris3") > 0) Then
             ' switch video distribution to Blue Iris 3 console (input 3)
-            hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 3, TRUE)
+            hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 3, True)
             hs.TimerReset("Iris3_motion_delay")
-        Else If (Instr(host,"Iris4") > 0) Then 
+        ElseIf (Instr(host, "Iris4") > 0) Then
             ' switch video distribution to Blue Iris 4 console (input 4)
-            hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 4, TRUE)
+            hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 4, True)
             hs.TimerReset("Iris4_motion_delay")
-        Else If (Instr(host,"Iris5") > 0) Then 
+        ElseIf (Instr(host, "Iris5") > 0) Then
             ' switch video distribution to Blue Iris 4 console (input 4)
-            hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 5, TRUE)
+            hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 5, True)
             hs.TimerReset("Iris5_motion_delay")
         End If
-    
+
     End If
 End Sub
 
@@ -128,57 +142,57 @@ End Sub
 '
 ' With command of show = shows the camera group on the console. 
 ' ctlName is the cam group name (camera names will not work) in the camera's config. Must macth exactly. Toi show all use "All cameras"
-' uses (CamSwitchInput4606Ref) control for PiP HDMI switch
-' (Focusedcam4720Ref) holds last Highlighting message
+' uses (CamSwitchInputRef) control for PiP HDMI switch
+' (FocusedcamRef) holds last Highlighting message
 Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As integer, ByVal command As String)
     Dim label = "callBI"
     Dim page = ""
     Try
-        If (Instr(command,TRIGGER) > 0) Then 
-            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?camera=" & ctlName & "&trigger" & BlueIrisLogin)
+        If (Instr(command,TRIGGER) > 0) Then
+            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?camera=" & ctlName & "&trigger" & hs.GetVar("BlueIrisLogin"))
             ' hs.GetURL(IP,URL,TRUE,port)
-            page = hs.GetURL(host,"/admin?camera=" & ctlName & "&trigger" & BlueIrisLogin,TRUE,port)
+            page = hs.GetURL(host, "/admin?camera=" & ctlName & "&trigger" & hs.GetVar("BlueIrisLogin"), True, port)
             ' reset timer for host console
             hs.TimerReset(host & "_motion_delay")
-        Else If (Instr(command,PROFILE) > 0) Then 
-            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?profile=" & ctlName & BlueIrisLogin)
+        Else If (Instr(command,PROFILE) > 0) Then
+            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?profile=" & ctlName & hs.GetVar("BlueIrisLogin"))
             ' hs.GetURL(IP,URL,TRUE,port)
-            page = hs.GetURL(host,"/admin?profile=" & ctlName & BlueIrisLogin,TRUE,port)
-        Else If (Instr(command,SHOW) > 0) Then 
-            'hs.WriteLog(label, "ctlName:" & ctlName & " host:" & host & " switch before:" & hs.DeviceValue(CamSwitchInput4606Ref))
+            page = hs.GetURL(host, "/admin?profile=" & ctlName & hs.GetVar("BlueIrisLogin"), True, port)
+        ElseIf (Instr(command,SHOW) > 0) Then
+            'hs.WriteLog(label, "ctlName:" & ctlName & " host:" & host & " switch before:" & hs.DeviceValue(hs.GetVar("CamSwitchInputRef")))
             Try
                 Try
-                    hs.SetDeviceString(Focusedcam4720Ref,"Highlighting " & ctlName & " on " & host,TRUE)
+                    hs.SetDeviceString(hs.GetVar("FocusedcamRef"), "Highlighting " & ctlName & " on " & host, True)
                     If (Instr(host,"Iris6") > 0) Then
-                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 2, TRUE)
-                    Else If (Instr(host,"Iris3") > 0) Then 
-                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 3, TRUE)
-                    Else If (Instr(host,"Iris4") > 0) Then 
-                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 4, TRUE)
-                    Else If (Instr(host,"Iris5") > 0) Then 
-                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 5, TRUE)
+                        hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 2, True)
+                    ElseIf (Instr(host,"Iris3") > 0) Then
+                        hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 3, True)
+                    ElseIf (Instr(host,"Iris4") > 0) Then
+                        hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 4, True)
+                    ElseIf (Instr(host,"Iris5") > 0) Then
+                        hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 5, True)
                     Else
-                        hs.SetDeviceValueByRef(Focusedcam4720Ref, 1, TRUE)
+                        hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 1, True)
                     End If
 
                 Catch ex As Exception
-                    hs.SetDeviceString(Focusedcam4720Ref,"Focusedcam was not stored",TRUE)
+                    hs.SetDeviceString(hs.GetVar("FocusedcamRef"), "Focusedcam was not stored", True)
                 End Try
             Catch ex As Exception
-                hs.WriteLog("callBI", "Focusedcam4720Ref:" & Focusedcam4720Ref & "parm:" & "Highlighting " & ctlName & " on " & host)
+                hs.WriteLog("callBI", "FocusedcamRef:" & hs.GetVar("FocusedcamRef") & "parm:" & "Highlighting " & ctlName & " on " & host)
             End Try
 
-            If (Instr(ctlName,"All cameras") > 0) Then 
+            If (Instr(ctlName,"All cameras") > 0) Then
                 ' switch video distribution to main video (input 1)
-                hs.SetDeviceValueByRef(CamSwitchInput4606Ref, 1, TRUE)
+                hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 1, True)
             End If
-            ' hs.WriteLog(label, " switch after:" & hs.DeviceValue(CamSwitchInput4606Ref))
-            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?console=" & ctlName & BlueIrisLogin)
+            ' hs.WriteLog(label, " switch after:" & hs.DeviceValue(hs.GetVar("CamSwitchInputRef")))
+            hs.WriteLog(label, "http://" & host & ":" & port & "/admin?console=" & ctlName & hs.GetVar("BlueIrisLogin"))
             ' hs.GetURL(IP,URL,TRUE,port)
-            page = hs.GetURL(host,"/admin?console=" & ctlName & BlueIrisLogin,TRUE,port)
+            page = hs.GetURL(host, "/admin?console=" & ctlName & hs.GetVar("BlueIrisLogin"), True, port)
         Else
             hs.WriteLog(label, "Unsupported command:" & command)
-            sayLog( "Unsupported command:" & command)
+            sayString("Unsupported command:" & command)
         End If
 
         If (Instr(page,"camera=NULL") > 0) Then 
@@ -197,7 +211,7 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
             hs.WriteLog(label, "" & command & " " & ctlName & " was sucessful")
         Else 
             hs.WriteLog(label, "GetURL returned:" & page)
-            sayLog( "Failed " & command & " of " & ctlName & " on " & host)
+            sayString("Failed " & command & " of " & ctlName & " on " & host)
         End If
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message & " " & host & ":" & port)

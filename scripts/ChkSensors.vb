@@ -1,5 +1,16 @@
-﻿'load object refs and speech methods
-#Include SayIt.vb
+﻿Sub sayString(ByVal msg As String)
+        hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+Public Sub sayGlobal(ByVal name As String)
+        hs.RunScriptFunc("SayIt.vb", "sayGlobal", name, False, False)
+End Sub
+
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("Check Sensors Script compiled OK")
+    sayGlobal("CheckedDeviceCountRef")
+End Sub
 
 ' Use "Do not update device last change time if device value does not change" flag
 Dim noChkFlag = HomeSeerAPI.Enums.dvMISC.SET_DOES_NOT_CHANGE_LAST_CHANGE
@@ -12,7 +23,7 @@ Public Function isNotFiltered(ByVal dv As Scheduler.Classes.DeviceClass) As Bool
     Dim cat = dv.Location2(Nothing)
     Dim rm = dv.Location(Nothing)
     Dim dtype = dv.Device_Type_String(Nothing)
-    
+
     Return InStr(cat, "NoData") = 0 And InStr(cat, "Root") = 0 And InStr(cat, "Counters-Timers") = 0 And InStr(rm, "Remove") = 0 And InStr(cat, "Remove") = 0 And InStr(cat, "UnusedValues") = 0 And InStr(cat, "UPS") = 0 And InStr(rm, "UltraWeatherWU3 Plugin") = 0 And InStr(dtype, "JowiHueGroup") = 0
 End Function
 
@@ -51,9 +62,11 @@ End Function
 ' Mark a device to be checked by chkSensors()
 Public Function mark2Chk(ByVal dv As Scheduler.Classes.DeviceClass)
     dv.MISC_Clear(hs, noChkFlag)
-    'clean up BLRadar plugin "No Echo" and "Check Sensor" status strings
+    ''clean up BLRadar plugin "No Echo" and "Check Sensor" status strings
     If InStr(dv.devString(Nothing), "No Echo") > 0 Or InStr(dv.devString(Nothing), "Check Sensor") > 0 Then
-        hs.SetDeviceString(dv.Ref(Nothing), "", True)
+        hs.WriteLog("mark2Chk", "DeviceString for " & dv.Name(Nothing) & " is '" & dv.devString(Nothing) & "'")
+        ' calling this causes an error IL_0105 or IL_013e depending on what set to
+        '        hs.SetDeviceString(dv.Ref(Nothing), "", True)
     End If
 
     ' If noChkFlag is unset and Attention has chkSensors in it remove Attention so we can see which devices have flag unset in the device list without opening them up
@@ -74,7 +87,7 @@ Public Function markNoChk(ByVal dv As Scheduler.Classes.DeviceClass)
 End Function
 
 ' Look for devices that have stopped updating.
-' Sets (CheckedDeviceCount4605Ref)
+' Sets (CheckedDeviceCountRef)
 Public Sub chkSensors(unused As Object)
     Dim label As String = "chkSensors"
     Dim now As DateTime = DateTime.Now
@@ -120,7 +133,8 @@ Public Sub chkSensors(unused As Object)
                         markOffline(dv)
                         downDevs = downDevs + 1
                         If chk1(dv) Then
-                            sayString("" & dv.Name(Nothing) & " is off line.")
+                            'sayString("" & dv.Name(Nothing) & " is off line.")
+                            hs.RunScriptFunc("SayIt.vb", "sayString", "" & dv.Name(Nothing) & " is off line.", False, False)
                         End If
                     Else
                         ' if has recovered since last chk restore the cat to remove from check list
@@ -137,9 +151,10 @@ Public Sub chkSensors(unused As Object)
                 restoreDevice(dv)
             End If
         Loop Until EN.Finished
-        hs.SetDeviceValueByRef(CheckedDeviceCount4605Ref, chkdTotal, True)
+        hs.SetDeviceValueByRef(hs.GetVar("CheckedDeviceCountRef"), chkdTotal, True)
         If downDevs > 0 Then
-            sayString("" & downDevs & " devices are off line.")
+            'sayString("" & downDevs & " devices are off line.")
+            hs.RunScriptFunc("SayIt.vb", "sayString", "" & downDevs & " devices are off line.", False, False)
             hs.TriggerEvent("Pink - Homeseer error")
         End If
         hs.WriteLog(label, "" & downDevs & " devices are off line.")
@@ -173,14 +188,15 @@ Public Sub initFlags(typeBase As Object)
             If dv.MISC_Check(hs, noChkFlag) Then
                 ' If not in one of the filtered locations then force the noChkFlag off so checker will check
                 If isNotFiltered(dv) Then
-                    If typeBase is Nothing Or InStr(dv.Device_Type_String(Nothing), typeBase) > 0 Then
+                    If typeBase Is Nothing Or InStr(dv.Device_Type_String(Nothing), typeBase) > 0 Then
                         mark2Chk(dv)
                         downDevs = downDevs + 1
                     End If
                 End If
             End If
         Loop Until EN.Finished
-        sayString("" & downDevs & " devices had flags cleared.")
+        'sayString("" & downDevs & " devices had flags cleared.")
+        hs.RunScriptFunc("SayIt.vb", "sayString", "" & downDevs & " devices had flags cleared.", False, False)
         hs.WriteLog(label, "" & downDevs & " devices had flags cleared.")
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
@@ -215,7 +231,8 @@ Public Sub fixFlagsByType(typeStr As String)
                 downDevs = downDevs + 1
             End If
         Loop Until EN.Finished
-        sayString("" & downDevs & " devices are fixed.")
+        'sayString("" & downDevs & " devices are fixed.")
+        hs.RunScriptFunc("SayIt.vb", "sayString", "" & downDevs & " devices had flags cleared.", False, False)
         hs.WriteLog(label, "" & downDevs & " devices are fixed.")
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
@@ -250,7 +267,8 @@ Public Sub fixFlagsByRoom(roomStr As String)
                 downDevs = downDevs + 1
             End If
         Loop Until EN.Finished
-        sayString("" & downDevs & " devices are fixed.")
+        'sayString("" & downDevs & " devices are fixed.")
+        hs.RunScriptFunc("SayIt.vb", "sayString", "" & downDevs & " devices are fixed.", False, False)
         hs.WriteLog(label, "" & downDevs & " devices are fixed.")
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)

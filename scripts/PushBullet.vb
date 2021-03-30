@@ -1,22 +1,45 @@
-﻿'load object refs and speech methods
-#Include SayIt.vb
+﻿' Methods for sending messages to Pushbullet
 
-' import headers def
-#Include Secrets.vb
-
-' Methods for sending messages to Pushbullet
-
-Sub Main(ByVal params As String) 
-    SendMsg(params)
+Sub sayString(ByVal msg As String)
+    hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
 End Sub
 
-' uses (Partition14702Ref)
-' (AlarmLevel2899Ref)
-' Const AlarmOff = 0
-' Const AlarmHome = 1
-' Const AlarmPerm = 2
-' Const AlarmAway = 3
+Public Sub sayGlobal(ByVal name As String)
+    hs.RunScriptFunc("SayIt.vb", "sayGlobal", name, False, False)
+End Sub
 
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("Push bullet Script compiled OK")
+    sayGlobal("Partition1Ref")
+    sayGlobal("AlarmLevelRef")
+    sayGlobal("AlarmOff")
+    sayGlobal("AlarmHome")
+    sayGlobal("AlarmPerm")
+    sayGlobal("AlarmAway")
+    Dim curTempID
+    curTempID = hs.GetVar("AmbientTemperatureRef")
+    SendMsg(curTempID)
+End Sub
+
+'Get the best name to use for the device
+Public Function betterName(ByVal dv As Object) As String
+    Dim label As Object = "betterName"
+    Dim name As Object = dv.VoiceCommand(Nothing)
+    Try
+        hs.WriteLog(label, "VoiceCommand: '" & name & "'")
+        If String.IsNullOrEmpty(name) Then
+            name = dv.Name(Nothing)
+            name.Replace(".", " ").Replace("_pwr", " power").Replace("_", " ")
+        End If
+        hs.WriteLog(label, "name: '" & name & "'")
+        Return name
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+        Return "unknown"
+    End Try
+
+End Function
 
 'params in format of title#message you want to send OR 
 'the device ref of a device that has a status string OR 
@@ -24,7 +47,7 @@ End Sub
 '
 ' if params has # delimiter then return params
 ' else assume device ref and if has status string return Name # Status String
-' else if device ref is Partition14702Ref then decode state from status strings
+' else if device ref is Partition1Ref then decode state from status strings
 ' else return Name # Open if device value > 0 
 ' else return Name # Closed
 Function ref2params(ByVal params As Object) As String
@@ -40,11 +63,11 @@ Function ref2params(ByVal params As Object) As String
         name = betterName(dv)
         hs.WriteLog("ref2params", "devString:(" & dv.devValue(Nothing) & ")")
         if String.IsNullOrEmpty(dv.devString(Nothing)) Then
-            if (Partition14702Ref = params) Then
-                'hs.WriteLog("ref2params", "Partition14702Ref = params")
+            If (hs.GetVar("Partition1Ref") = params) Then
+                'hs.WriteLog("ref2params", "Partition1Ref = params")
                 Dim cond
-                try
-                    Select Case hs.DeviceValue(Partition14702Ref)
+                Try
+                    Select Case hs.DeviceValue(hs.GetVar("Partition1Ref"))
                         Case -1005
                             cond = "Disarm"
                         Case -1004
@@ -84,19 +107,19 @@ Function ref2params(ByVal params As Object) As String
                         Case Else
                             cond = "Error"
                     End Select
-                    return "" & name & " # " & cond
+                    Return "" & name & " # " & cond
                 Catch ex As Exception
                     hs.WriteLog("Error", "Exception in script ref2params:  " & ex.Message)
                 End Try
-            Else if (InStr(cat, "Temperature") > 0) Then
+            ElseIf (InStr(cat, "Temperature") > 0) Then
                 'hs.WriteLog("ref2params", "InStr(cat, Temperature) > 0")
-                return "" & name & " is " & dv.devValue(Nothing) & "degrees"
-            Else if (dv.devValue(Nothing) > 0) Then
+                Return "" & name & " is " & dv.devValue(Nothing) & "degrees"
+            ElseIf (dv.devValue(Nothing) > 0) Then
                 'hs.WriteLog("ref2params", "dv.devValue(Nothing) > 0")
-                return "" & name & " # Open"
+                Return "" & name & " # Open"
             Else
                 'hs.WriteLog("ref2params", "dv.devValue(Nothing) <= 0")
-                return "" & name & " # Closed"
+                Return "" & name & " # Closed"
             End if
         Else 
             'hs.WriteLog("ref2params", "!String.IsNullOrEmpty(dv.devString(Nothing))")
@@ -110,30 +133,33 @@ End Function
 ' Send if alarm in away mode
 Sub SendMsgIfAway(ByVal params As String) 
     Dim label = "SendMsgIfAway"
-    hs.WriteLog(label, "AlarmLevel2899Ref:" & hs.DeviceValue(AlarmLevel2899Ref))
+    hs.WriteLog(label, "AlarmLevelRef:" & hs.DeviceValue(hs.GetVar("AlarmLevelRef")))
+    hs.WriteLog(label, "AlarmAway:" & hs.GetVar("AlarmAway"))
     params = ref2params(params)
-    if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmAway Then
+    If hs.DeviceValue(hs.GetVar("AlarmLevelRef")) >= hs.GetVar("AlarmAway") Then
         SendMsg(params & " in away mode")
-    Else if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmHome Then
+    ElseIf hs.DeviceValue(hs.GetVar("AlarmLevelRef")) >= hs.GetVar("AlarmHome") Then
         Dim paramArr()
         paramArr = params.Split("#")
-        sayString(paramArr(0) & " " & paramArr(1))
+        'sayString(paramArr(0) & " " & paramArr(1))
+        hs.RunScriptFunc("SayIt.vb", "sayString", paramArr(0) & " " & paramArr(1), False, False)
     End if
 End Sub
 
 ' Send if alarm in perimeter or away mode
 Sub SendMsgIfPerm(ByVal params As String) 
     Dim label = "SendMsgIfPerm"
-    hs.WriteLog(label, "AlarmLevel2899Ref:" & hs.DeviceValue(AlarmLevel2899Ref))
+    hs.WriteLog(label, "AlarmLevel2899Ref:" & hs.DeviceValue(hs.GetVar("AlarmLevelRef")))
     params = ref2params(params)
-    if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmAway Then
+    If hs.DeviceValue(hs.GetVar("AlarmLevelRef")) >= hs.GetVar("AlarmAway") Then
         SendMsgIfAway(params)
-    Else if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmPerm Then
+    ElseIf hs.DeviceValue(hs.GetVar("AlarmLevelRef")) >= hs.GetVar("AlarmPerm") Then
         SendMsg(params & " in perimeter mode")
-    Else if hs.DeviceValue(AlarmLevel2899Ref) >= AlarmHome Then
+    ElseIf hs.DeviceValue(hs.GetVar("AlarmLevelRef")) >= hs.GetVar("AlarmHome") Then
         Dim paramArr()
         paramArr = params.Split("#")
-        sayString(paramArr(0) & " " & paramArr(1))
+        'sayString(paramArr(0) & " " & paramArr(1))
+        hs.RunScriptFunc("SayIt.vb", "sayString", paramArr(0) & " " & paramArr(1), False, False)
     End if
 End Sub
 
@@ -149,9 +175,11 @@ Sub SendMsg(ByVal params As String)
     title = paramArr(0) 
     message = paramArr(1) 
 
-    data = "type=note&title="+title+"&body="+message 
+    data = "type=note&title="+title+"&body="+message
 
-    s = hs.URLAction(server_url, "POST", data, headers) 
+    s = hs.URLAction(server_url, "POST", data, hs.GetVar("headers"))
 
-    sayAlert(title & " " & message)
+    '    sayAlert(title & " " & message)
+    hs.RunScriptFunc("SayIt.vb", "sayAlert", title & " " & message, False, False)
+
 End Sub

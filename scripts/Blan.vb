@@ -1,5 +1,7 @@
-﻿'load object refs and speech methods
-#Include SayIt.vb
+﻿' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    hs.speakEx(0, "B lan script compiled OK", False)
+End Sub
 
 ' Hack to make Blan devices have a status value
 ' call from a set or value changed event
@@ -22,7 +24,7 @@ Public Sub statusBlan(ByVal refID As Object)
 End Sub
 
 ' Find all the BLAN devices and call statusBlan() on them
-Public Sub fixBlan(Parms As Object)
+Public Sub fixBlan(ByVal ignored As Object)
     Dim label As String = "fixBlan"
     Try
         Dim dv As Scheduler.Classes.DeviceClass

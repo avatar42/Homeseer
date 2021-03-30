@@ -10,8 +10,8 @@ Sub Main(Parm As Object)
     Try
         Dim EvListGroup() As strEventGroupData
         EvListGroup = hs.Event_Group_Info_All
-        hs.writelog(LT, "Found " & EvListGroup.Length & " Events in list")
         file = My.Computer.FileSystem.OpenTextFileWriter("./html/reports/Event.list." & Now.ToString("yyMMdd") & ".csv", True)
+        hs.writelog(LT, "Found " & EvListGroup.Length & " Events in list")
         file.WriteLine("Group Name,Group ID,Event Name,Reference,Type,Last Triggered,A.T.GA.GC,Name")
         For Each EventGroup As strEventGroupData In EvListGroup
             hs.writelog(LT, "*** New Group ***")

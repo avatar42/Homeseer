@@ -1,4 +1,19 @@
-﻿#Include Refs.vb
+﻿Sub sayString(ByVal msg As String)
+        hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+Public Sub sayGlobal(ByVal name As String)
+        hs.RunScriptFunc("SayIt.vb", "sayGlobal", name, False, False)
+End Sub
+
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("List Devices Script compiled OK")
+    sayGlobal("devicecountref")
+    sayGlobal("lastdeviceref")
+    sayGlobal("devicechksumref")
+End Sub
+
 Const Quote = """"
 ' look at all the devices and set virtutals to number of devices, highest ref number and sum of ref numbers so an event can do a check and announce 
 ' if something changes.
@@ -35,9 +50,9 @@ Public Sub DevChk(Parms As Object)
             End If
         Loop Until EN.Finished
         hs.WriteLog(label, "cnt:  " & cnt & " max: " & max & " total: " & total)
-        hs.SetDeviceValueByRef(DeviceCount1522Ref, cnt, True)
-        hs.SetDeviceValueByRef(LastDevice2975Ref, max, True)
-        hs.SetDeviceValueByRef(DeviceChksum4597Ref, total, True)
+        hs.SetDeviceValueByRef(hs.GetVar("devicecountref"), cnt, True)
+        hs.SetDeviceValueByRef(hs.GetVar("lastdeviceref"), max, True)
+        hs.SetDeviceValueByRef(hs.GetVar("devicechksumref"), total, True)
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try

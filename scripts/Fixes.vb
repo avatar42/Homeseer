@@ -1,7 +1,16 @@
-'load object refs and speech methods
-#Include SayIt.vb
+' Note Images are not used in HS4 so while this might run on HS4 it is really only for HS3
 
-' Find all the devices where type contains typeStr 
+Public Sub sayString(ByVal msg As Object)
+ hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("Fixes Script compiled OK")
+End Sub
+
+' Find all the devices where type contains typeStr and set the image to path
+' parms=typeStr,path
 Public Sub setImageByType(ByVal parms As String)
     Dim label As String = "setImageByType"
     Dim args() As String = Split(parms, ",")
@@ -41,7 +50,8 @@ Public Sub setImageByType(ByVal parms As String)
     End Try
 End Sub
 
-' Find all the devices where address contains addrStr 
+' Find all the devices where address contains addrStr and set the image to path
+' parms=addrStr,path
 Public Sub setImageByAddr(ByVal parms As String)
     Dim label As String = "setImageByType"
     Dim args() As String = Split(parms, ",")

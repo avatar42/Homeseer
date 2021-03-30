@@ -1,37 +1,65 @@
-﻿'load object refs and speech methods
-#Include SayIt.vb
-'Uses (S1LastAlertMessage1355Ref)
-'(S1WindDirection1215Ref)
-'(S1GustSpeed1212Ref)
-'(S1RainToday1216Ref)
-'(S1TodayHigh1243Ref)
-'(S1TemperatureHighNormal1182Ref)
-'(S1TodayLow1244Ref)
-'(S1TemperatureLowNormalRef)
-'(S1TodayPrediction1245Ref)
-'(WeatherAlerts1179Ref)
-'(WeatherAlerts1179Ref)
-'(S1CurrentCondition1233Ref)
+﻿Sub sayString(ByVal msg As String)
+    hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
+Public Sub sayGlobal(ByVal name As String)
+    hs.RunScriptFunc("SayIt.vb", "sayGlobal", name, False, False)
+End Sub
+
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    sayString("Blue Iris Script compiled OK")
+    sayGlobal("S1LastAlertMessageRef")
+    sayGlobal("S1WindDirectionRef")
+    sayGlobal("S1GustSpeedRef")
+    sayGlobal("S1RainTodayRef")
+    sayGlobal("S1TodayHighRef")
+    sayGlobal("S1TemperatureHighNormalRef")
+    sayGlobal("S1TodayLowRef")
+    sayGlobal("S1TemperatureLowNormalRef")
+    sayGlobal("S1TodayPredictionRef")
+    sayGlobal("WeatherAlertsRef")
+    sayGlobal("WeatherAlertsRef")
+    sayGlobal("S1CurrentConditionRef")
+    weatherStatus("")
+End Sub
 
 
 Public Sub weatherAlert(ByVal notUsed As Object)
-    sayString("Last alert was "& hs.DeviceString(S1LastAlertMessage1355Ref))
+    hs.RunScriptFunc("SayIt.vb", "sayString", "Last alert was " & hs.DeviceString(hs.GetVar("S1LastAlertMessageRef")), False, False)
 End Sub
 
 Public Sub weatherStatus(ByVal notUsed As Object)
     Dim label As String = "weatherStatus"
-    try
-        'sayAlert("Currently condition is " & hs.DeviceString(S2CurrentCondition1238Ref) & " With a feels like temperature of " & hs.DeviceValue(S2TemperatureFeelsLike1202Ref) & " degrees")
-        SayCurrentCondition()
+    Try
+        If (hs.GetVar("S1CurrentConditionRef") = 0) Then
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "Currently condition is " & hs.DeviceString(hs.GetVar("S2CurrentConditionRef")) & " With a feels like temperature of " & hs.DeviceValue(hs.GetVar("S2TemperatureFeelsLikeRef")) & " degrees", False, False)
+        End If
+
+        If (hs.GetVar("S1CurrentConditionRef") = 0) Then
+            SayCurrentCondition()
+        End If
+
         'wind spelled wend to sound right
-        sayAlert("wend is from the " & windDirection(hs.DeviceValue(S1WindDirection1215Ref)) & " gusting to " & hs.DeviceValue(S1GustSpeed1212Ref) & " miles per hour")
-        sayAlert("Rain since midnight is  " & hs.DeviceValue(S1RainToday1216Ref) & " inches")
-        sayAlert("Expected high is  " & hs.DeviceValue(S1TodayHigh1243Ref) & " compared to the normal of " & hs.DeviceValue(S1TemperatureHighNormal1182Ref) & " degrees")
-        sayAlert("Expected low is  " & hs.DeviceValue(S1TodayLow1244Ref) & " compared to the normal of " & hs.DeviceValue(S1TemperatureLowNormal1185Ref) & " degrees")
-        sayAlert("Forecast is  " & hs.DeviceString(S1TodayPrediction1245Ref))
-        sayAlert("There are "& hs.DeviceValue(WeatherAlerts1179Ref) & " alerts in effect")
-        If hs.DeviceValue(WeatherAlerts1179Ref) > 0 Is Nothing Then
-            sayAlert("Last alert was "& hs.DeviceString(S1LastAlertMessage1355Ref))
+        hs.RunScriptFunc("SayIt.vb", "sayAlert", "wend is from the " & windDirection(hs.DeviceValue(hs.GetVar("S1WindDirectionRef"))) & " gusting to " & hs.DeviceValue(hs.GetVar("S1GustSpeedRef")) & " miles per hour", False, False)
+        hs.RunScriptFunc("SayIt.vb", "sayAlert", "Rain since midnight is  " & hs.DeviceValue(hs.GetVar("S1RainTodayRef")) & " inches", False, False)
+        If (hs.GetVar("S1TemperatureHighNormalRef") = 0) Then
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "High so far was  " & hs.DeviceValue(hs.GetVar("S1TodayHighRef")) & " degrees", False, False)
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "Low so far was  " & hs.DeviceValue(hs.GetVar("S1TodayLowRef")) & " degrees", False, False)
+        Else
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "Expected high is  " & hs.DeviceValue(hs.GetVar("S1TodayHighRef")) & " compared to the normal of " & hs.DeviceValue(hs.GetVar("S1TemperatureHighNormalRef")) & " degrees", False, False)
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "Expected low is  " & hs.DeviceValue(hs.GetVar("S1TodayLowRef")) & " compared to the normal of " & hs.DeviceValue(hs.GetVar("S1TemperatureLowNormalRef")) & " degrees", False, False)
+        End If
+        If (hs.GetVar("S1TodayPredictionRef") > 0) Then
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "Forecast is  " & hs.DeviceString(hs.GetVar("S1TodayPredictionRef")), False, False)
+        End If
+        If (hs.GetVar("WeatherAlertsRef") > 0) Then
+            hs.RunScriptFunc("SayIt.vb", "sayAlert", "There are " & hs.DeviceValue(hs.GetVar("WeatherAlertsRef")) & " alerts in effect", False, False)
+            If (hs.GetVar("S1LastAlertMessageRef") > 0) Then
+                If hs.DeviceValue(hs.GetVar("WeatherAlertsRef")) > 0 Is Nothing Then
+                    hs.RunScriptFunc("SayIt.vb", "sayAlert", "Last alert was " & hs.DeviceString(hs.GetVar("S1LastAlertMessageRef")), False, False)
+                End If
+            End If
         End If
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
@@ -39,11 +67,11 @@ Public Sub weatherStatus(ByVal notUsed As Object)
 
 End Sub
 
-Public Function SayCurrentCondition()
+Public Function SayCurrentCondition() As String
     Dim label As String = "SayCurrentCondition"
     Dim cond As String = "unknown"
-    try
-        Select Case hs.DeviceValue(S1CurrentCondition1233Ref)
+    Try
+        Select Case hs.DeviceValue(hs.GetVar("S1CurrentConditionRef"))
             Case -25
                 cond = "Scattered Clouds"
             Case -24
@@ -149,38 +177,78 @@ Public Function SayCurrentCondition()
             Case Else
                 cond = "Error"
         End Select
-        sayAlert("Currently condition is " & cond & " With a feels like temperature of " & hs.DeviceValue(S1TemperatureFeelsLike1190Ref) & " degrees")
+        hs.RunScriptFunc("SayIt.vb", "sayAlert", "Currently condition is " & cond & " With a feels like temperature of " & hs.DeviceValue(hs.GetVar("S1TemperatureFeelsLikeRef")) & " degrees", False, False)
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
+    Return cond
 End Function
 
 Public Function windDirection(ByVal degrees As Object) As String
     Dim label As String = "windDirection"
     Dim dir As String = "unknown"
-    try
-    if (degrees >= 0 and degrees <=23) Then
-        return "north"
-    Else if (degrees > 23 and degrees <=68) Then
-        return "north east"
-    Else if (degrees > 68 and degrees <=113) Then
-        return "east"
-    Else if (degrees > 113 and degrees <=158) Then
-        return "south east"
-    Else if (degrees > 158 and degrees <=203) Then
-        return "south"
-    Else if (degrees > 203 and degrees <=248) Then
-        return "south west"
-    Else if (degrees > 248 and degrees <=293) Then
-        return "west"
-    Else if (degrees > 293 and degrees <=338) Then
-        return "north west"
-    Else if (degrees > 338 and degrees <=360) Then
-        return "north"
+    If TypeOf degrees Is String Then
+        Return windDirectionDir(degrees)
     End If
+    Try
+        If (degrees >= 0 And degrees <= 23) Then
+            Return "north"
+        ElseIf (degrees > 23 And degrees <= 68) Then
+            Return "north east"
+        ElseIf (degrees > 68 And degrees <= 113) Then
+            Return "east"
+        ElseIf (degrees > 113 And degrees <= 158) Then
+            Return "south east"
+        ElseIf (degrees > 158 And degrees <= 203) Then
+            Return "south"
+        ElseIf (degrees > 203 And degrees <= 248) Then
+            Return "south west"
+        ElseIf (degrees > 248 And degrees <= 293) Then
+            Return "west"
+        ElseIf (degrees > 293 And degrees <= 338) Then
+            Return "north west"
+        ElseIf (degrees > 338 And degrees <= 360) Then
+        End If
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
+    Return "error"
+End Function
 
+Public Function windDirectionDir(ByVal degrees As Object) As String
+    Dim label As String = "windDirection"
+    Dim dir As String = "unknown"
+    Try
+        If (String.Compare(degrees, "N") = 0) Then
+            Return "north"
+        ElseIf (String.Compare(degrees, "NE") = 0) Then
+            Return "north east"
+        ElseIf (String.Compare(degrees, "ENE") = 0) Then
+            Return "east north east"
+        ElseIf (String.Compare(degrees, "E") = 0) Then
+            Return "east"
+        ElseIf (String.Compare(degrees, "SE") = 0) Then
+            Return "south east"
+        ElseIf (String.Compare(degrees, "ESE") = 0) Then
+            Return "east south east"
+        ElseIf (String.Compare(degrees, "S") = 0) Then
+            Return "south"
+        ElseIf (String.Compare(degrees, "SW") = 0) Then
+            Return "south west"
+        ElseIf (String.Compare(degrees, "WSW") = 0) Then
+            Return "west south west"
+        ElseIf (String.Compare(degrees, "W") = 0) Then
+            Return "west"
+        ElseIf (String.Compare(degrees, "NW") = 0) Then
+            Return "north west"
+        ElseIf (String.Compare(degrees, "WNW") = 0) Then
+            Return "west north west"
+        Else
+            Return degrees
+        End If
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+    End Try
+    Return degrees
 End Function
 

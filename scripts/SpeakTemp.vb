@@ -1,5 +1,6 @@
-﻿'load object refs and speech methods
-#Include SayIt.vb
+﻿Public Sub sayString(ByVal msg As Object)
+ hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
 
 'Say the name, value (as temp) and last change time of a device.
 Public Sub SpeakTemp(ByVal devRef As Object)  
