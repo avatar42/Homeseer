@@ -1,3 +1,7 @@
+' Checks script complies and globals used, are defined
+Sub Main(ByVal ignored As String)
+    hs.speakEx(0, "Create W M I objects script compiled OK", False)
+End Sub
 ' See https://automation.rmrr42.com/2018/06/use-windows-wmi-and-powershell-to-send.html for example of usage and WMI agent script.
 ' creates a base set of WMI virtual objects for a hostname
 Sub createWMISet(ByVal host As Object)
