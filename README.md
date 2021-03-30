@@ -1,6 +1,7 @@
 # Homeseer
 Homeseer scripts and tools<br>
 
+## Note these work under Windows but not mono (Linux) because of issues with include directives in mono. Going to redo them all in near future.
 
 Script | Description
 ---- | ----
