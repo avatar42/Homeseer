@@ -103,7 +103,7 @@ Public Sub chkSensors(unused As Object)
         End If
         ' overwrite file (append = False)
         file = My.Computer.FileSystem.OpenTextFileWriter("./html/reports/Device2Chk.csv", False)
-        file.WriteLine("Ref,Location2 (cat),Location (room),Name,Value,Last_Change,Attrs, Hours Down")
+        file.WriteLine("Ref,Location2 (cat),Location (room),Name,Value,Last_Change,Attrs,Hours Down,Type,Address,Note")
         Do  'check each device that was enumerated
             dv = EN.GetNext
             If dv Is Nothing Then  'No device, so quit
@@ -118,7 +118,7 @@ Public Sub chkSensors(unused As Object)
                     Dim lastChg As DateTime = dv.Last_Change(Nothing)
                     Dim span = now - lastChg
                     chkdTotal = chkdTotal + 1
-                    ' Note while checking down for 24 hours is good for most, if you are checking thinks that update once a day 36 or 48 is better. 
+                    ' Note while checking down for 24 hours is good for most, if you are checking things that update once a day 36 or 48 is better. 
                     If span.TotalHours > 48 Or (span.TotalHours > 24 And chk24(dv)) Or (span.TotalHours > 1 And chk1(dv)) Then
                         Dim attrs As String = ""
                         For i As Integer = 1 To 1048576
@@ -129,7 +129,7 @@ Public Sub chkSensors(unused As Object)
                             End If
                             i = i * 2
                         Next
-                        file.WriteLine("" & dv.Ref(Nothing) & "," & dv.Location2(Nothing) & "," & dv.Location(Nothing) & "," & dv.Name(Nothing) & "," & dv.devValue(Nothing) & "," & dv.Last_Change(Nothing) & "," & attrs & "," & span.TotalHours)
+                        file.WriteLine("" & dv.Ref(Nothing) & "," & dv.Location2(Nothing) & "," & dv.Location(Nothing) & "," & dv.Name(Nothing) & "," & dv.devValue(Nothing) & "," & dv.Last_Change(Nothing) & "," & attrs & "," & span.TotalHours & "," & dv.Device_Type_String(Nothing) & "," & dv.Address(Nothing) & "," & dv.UserNote(Nothing))
                         markOffline(dv)
                         downDevs = downDevs + 1
                         If chk1(dv) Then
@@ -198,6 +198,29 @@ Public Sub initFlags(typeBase As Object)
         'sayString("" & downDevs & " devices had flags cleared.")
         hs.RunScriptFunc("SayIt.vb", "sayString", "" & downDevs & " devices had flags cleared.", False, False)
         hs.WriteLog(label, "" & downDevs & " devices had flags cleared.")
+    Catch ex As Exception
+        hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+    End Try
+End Sub
+
+' Find all the devices where type contains typeStr and Location2 (cat) of offline and set noChkFlag
+Public Sub whatis(dvRef As Object)
+    Dim label As String = "fixFlagsByType"
+    Dim dv As Scheduler.Classes.DeviceClass
+
+    Try
+        If dvRef Is Nothing Then
+            hs.WriteLog(label, "No dvRef passed")
+            Exit Sub
+        End If
+
+        dv = hs.GetDeviceByRef(dvRef)
+        If dv Is Nothing Then  'No device, so quit
+            hs.WriteLog(label, "No device found for " + dvRef)
+            Exit Sub
+        End If
+
+        hs.WriteLog(label, "" & dvRef & " = Location(Room):" & dv.Location(Nothing) & ",Location2:" & dv.Location2(Nothing) & ",Type:" & dv.Device_Type_String(Nothing) & ",Address:" & dv.Address(Nothing) & ",Last Change:" & dv.Last_Change(Nothing))
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
