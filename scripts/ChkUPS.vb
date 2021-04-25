@@ -34,7 +34,7 @@ Public Sub chkUPSs(Parms As Object)
             If InStr(cat, "UPS") > 0 And InStr(dv.Device_Type_String(Nothing), "Status") > 0 Then
                 'hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & ":" & dv.Device_Type_String(Nothing) & " " & dv.Location(Nothing) & " (" & dv.Name(Nothing) & ")" & " (" & dv.devString(Nothing) & ")"  & " (" & dv.devValue(Nothing) & ")" & hs.CapiGetStatus(dv.Ref(Nothing)).Status)
                 Dim status = dv.Name(Nothing) + dv.devString(Nothing) + hs.CapiGetStatus(dv.Ref(Nothing)).Status
-                If InStr(status, "Disconnected") > 0 Or InStr(status, "REPLACE_BATTERY") > 0 Or InStr(status, "COMM_LOST") > 0 Or InStr(status, "LOW") > 0 Then
+                If InStr(status, "Disconnected") > 0 Or InStr(status, "COMM_LOST") > 0 Or InStr(status, "LOW") > 0 Then
                     Dim attrs As String = ""
                     For i As Integer = 1 To 1048576
                         If dv.MISC_Check(hs, i) Then
@@ -46,6 +46,20 @@ Public Sub chkUPSs(Parms As Object)
                     Next
                     hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & " " & dv.Location(Nothing) & " " & dv.Name(Nothing) & " with value:" & dv.devValue(Nothing) & " updated:" & dv.Last_Change(Nothing) & " attrs:" & attrs)
                     sayString("U P S on " & loc & " is down.")
+                    downDevs = downDevs + 1
+                End If
+                If InStr(status, "REPLACE_BATTERY") > 0 Then
+                    Dim attrs As String = ""
+                    For i As Integer = 1 To 1048576
+                        If dv.MISC_Check(hs, i) Then
+                            attrs = "" & 1 & attrs
+                        Else
+                            attrs = "" & 0 & attrs
+                        End If
+                        i = i * 2
+                    Next
+                    hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & " " & dv.Location(Nothing) & " " & dv.Name(Nothing) & " with value:" & dv.devValue(Nothing) & " updated:" & dv.Last_Change(Nothing) & " attrs:" & attrs)
+                    sayString("U P S on " & loc & " is replace battery.")
                     downDevs = downDevs + 1
                 End If
             End If
