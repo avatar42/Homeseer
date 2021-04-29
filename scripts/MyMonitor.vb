@@ -3,6 +3,11 @@ Sub Main(ByVal ignored As String)
     hs.speakEx(0, "My Monitor Script compiled OK", False)
 End Sub
 
+' link to common sayString method
+Sub sayString(ByVal msg As String)
+        hs.RunScriptFunc("SayIt.vb", "sayString", msg, False, False)
+End Sub
+
 ' See https://homeseer.com/support/homeseer/HS3/SDK/default.htm for API info
 ' See https://github.com/avatar42/MyMonitor for info on MyMonitor
 ' Valid typeStrs are: cam, ptz, camA, ptzA, tivo, ssh, cnt, humidity, plug, pressure, rssi, 
@@ -11,6 +16,7 @@ Sub createMonDev(ByVal parms As Object)
     Dim dv As Scheduler.Classes.DeviceClass = Nothing
     Dim args() As String = Split(parms, ",")
     Dim label As String = "createMonDev"
+    ' name used should be unique temp only name tp avoid changing the wrong one.
     Dim name As String = "MyMonitorNew"
     Dim typeStr As String = "web"
     Dim dvRef
@@ -24,19 +30,60 @@ Sub createMonDev(ByVal parms As Object)
     hs.WriteLog(label,"name:" & name)
 
     try
-        dvRef = hs.NewDeviceRef(name)
-        hs.WriteLog(label,"Created:" & dvRef)
+        dvRef = hs.GetDeviceRefByName(name)
+        ' only create if there is not one waiting, create one
+        if dvRef > 0 Then
+            hs.WriteLog(label,"found:" & dvRef)
+        Else
+            dvRef = hs.NewDeviceRef(name)
+            hs.WriteLog(label,"Created:" & dvRef)
+        End If
         fixMonDev(dvRef & "," & typeStr)
-        dv = hs.GetDeviceByRef(dvRef)
-        ' make easy to find in case there is one left over of a diff type
-        dv.Location2(hs) = typeStr
     Catch ex As Exception
         hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
     End Try
 
 End Sub
 
+' Get standard location for type typeStr
+Public Function type2loc(ByVal typeStr As String) As String
+    Dim loc As String = "MyMonitor"
+            if String.Equals(typeStr,"battery") Then
+                loc = "Batteries" 
+                ' Uses pic of object battery is in
+            Else if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
+                loc = "BlueIris" 
+            Else if String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
+                loc = "BlueIris" 
+            Else if String.Equals(typeStr,"tivo") Then
+                loc = "Tivo" 
+            Else if String.Equals(typeStr,"plug") Then
+                loc = "Power" 
+            Else if String.Equals(typeStr,"cnt") Then
+            Else if String.Equals(typeStr,"motion") Then
+                loc = "Motion" 
+            Else if String.Equals(typeStr,"pressure") Then
+                loc = "Pressure" 
+            Else if String.Equals(typeStr,"humidity") Then
+                loc = "Humidity" 
+            Else if String.Equals(typeStr,"rssi") Then
+                loc = "Signal" 
+            Else if String.Equals(typeStr,"solar") Then
+                loc = "Light" 
+            Else if String.Equals(typeStr,"temp") Then
+                loc = "Temperature" 
+            Else if String.Equals(typeStr,"wind") Then
+                loc = "Wind" 
+            Else if String.Equals(typeStr,"dir") Then
+                loc = "Wind" 
+            End If
+    return loc
+End Function
+
+' Changes device with ref=dvRef to the type typeStr
+' parms is expected to be String in format of dvRef,typeStr
 Public Sub fixMonDev(ByVal parms As Object)
+
     Dim args() As String = Split(parms, ",")
     Dim label As String = "fixMonDev"
     Dim dv As Scheduler.Classes.DeviceClass = Nothing
@@ -44,6 +91,7 @@ Public Sub fixMonDev(ByVal parms As Object)
     Dim root_dv As Scheduler.Classes.DeviceClass = Nothing
     Dim typeStr As String = "web"
     Dim dvRef = 0
+    hs.WriteLog(label,"parms:" & parms)
     if parms <> "" Then
         dvRef = args(0)
         if  args(1)  <> "" then
@@ -52,6 +100,7 @@ Public Sub fixMonDev(ByVal parms As Object)
     End If
 
     try
+        hs.WriteLog(label,"Updating:" & dvRef & ":" & typeStr)
         dv = hs.GetDeviceByRef(dvRef)
 
         If Not dv Is Nothing Then
@@ -63,49 +112,41 @@ Public Sub fixMonDev(ByVal parms As Object)
             dv.Location(hs) = "MyMonitor" ' Room in my system
 
             ' set default thumbnail pic and category
-            dv.Location2(hs) = "MyMonitor" ' default
-            if String.Equals(typeStr,"battery") Then
-                dv.Location2(hs) = "Batteries" 
-                ' Uses pic of object battery is in
-            Else if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
-                dv.Image(hs) = "/images/blueiris/fixedcam.png"
-                dv.Location2(hs) = "BlueIris" 
-            Else if String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
-                dv.Image(hs) = "/images/blueiris/ptzcam.png"
-                dv.Location2(hs) = "BlueIris" 
-            Else if String.Equals(typeStr,"tivo") Then
-                dv.Image(hs) = "/images/hspi_ultramon3/tivo_online.png"
-                dv.Location2(hs) = "Tivo" 
-            Else if String.Equals(typeStr,"plug") Then
-                dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
-                dv.Location2(hs) = "Power" 
-            Else if String.Equals(typeStr,"cnt") Then
-                dv.Image(hs) = "/images/HomeSeer/status/counters_small.png"
-            Else if String.Equals(typeStr,"motion") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Motion" 
-            Else if String.Equals(typeStr,"pressure") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Pressure" 
-            Else if String.Equals(typeStr,"humidity") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Humidity" 
-            Else if String.Equals(typeStr,"rssi") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Signal" 
-            Else if String.Equals(typeStr,"solar") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Light" 
-            Else if String.Equals(typeStr,"temp") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Temperature" 
-            Else if String.Equals(typeStr,"wind") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Wind" 
-            Else if String.Equals(typeStr,"dir") Then
-                ' Uses pic of object is from
-                dv.Location2(hs) = "Wind" 
-            End If
+            dv.Location2(hs) = type2loc(typeStr)
+            hs.WriteLog("Info","The API interface version of HomeSeer is " & hs.InterfaceVersion.ToString)
+            if (hs.InterfaceVersion < 4) Then
+                if String.Equals(typeStr,"battery") Then
+                    ' Uses pic of object battery is in
+                Else if String.Equals(typeStr,"cam") Or String.Equals(typeStr,"camA") Then
+                    dv.Image(hs) = "/images/blueiris/fixedcam.png"
+                Else if String.Equals(typeStr,"ptz") Or String.Equals(typeStr,"ptzA") Then
+                    dv.Image(hs) = "/images/blueiris/ptzcam.png"
+                Else if String.Equals(typeStr,"tivo") Then
+                    dv.Image(hs) = "/images/hspi_ultramon3/tivo_online.png"
+                Else if String.Equals(typeStr,"plug") Then
+                    dv.Image(hs) = "/images/Devices/Etekcity_small.jpg"
+                Else if String.Equals(typeStr,"cnt") Then
+                    dv.Image(hs) = "/images/HomeSeer/status/counters_small.png"
+                Else if String.Equals(typeStr,"motion") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"pressure") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"humidity") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"rssi") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"solar") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"temp") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"wind") Then
+                    ' Uses pic of object is from
+                Else if String.Equals(typeStr,"dir") Then
+                    ' Uses pic of object is from
+                End If
+            Else
+                hs.WriteLog(label,"Skipping image add for hs4")
+           End If
 
             hs.WriteLog(label,"Updated Location:" & dv.Location(hs) & ":" & dv.Location2(hs))
 
@@ -239,8 +280,7 @@ Public Sub fixMonDev(ByVal parms As Object)
                 ' web response codes and custom errors
                 GenSingleStatusValue(dvRef,200,"/images/HomeSeer/status/ok_small.png")
                 GenRangeStatusValue(dvRef,300,999,"/images/HomeSeer/status/alarmco.png")
-            End If
-            
+            End If            
 
             ' if want to make child of other device 
             If Not root_dv Is Nothing Then 
@@ -263,6 +303,7 @@ Public Sub fixMonDev(ByVal parms As Object)
             ' dv.DeviceType_Set(hs) = DT
             hs.WriteLog(label,"Updated type:" & dv.DeviceType_Get(hs).Device_Type_Description)
 
+            ' update any related events with changes
             hs.SaveEventsDevices 
         Else 
             hs.WriteLog(label,"Failed to update:" & dvRef)
@@ -276,6 +317,7 @@ End Sub
 Public Sub GenSingleStatus(ByVal dvRef As Integer,ByVal val As Double,ByVal status As String,ByVal image As String)
     ' see https://www.homeseer.com/support/homeseer/HS3/HS3Help/vspair.htm
     Dim Pair As VSPair
+    hs.WriteLog("GenSingleStatus","Adding status cntl:" &  val & " as Button " & status)
     ' want ePairStatusControl.Both so can change via URL
     Pair = New VSPair(HomeSeerAPI.ePairStatusControl.Both)
     Pair.PairType = VSVGPairType.SingleValue
@@ -299,6 +341,7 @@ End Sub
 
 Public Sub GenRangeCtl(ByVal dvRef As Integer,ByVal rangeStart As Double,ByVal rangeEnd As Double,ByVal status As String,ByVal decimals As Integer,ByVal prefix As String,ByVal suffix As String)
     Dim Pair As VSPair
+    hs.WriteLog("GenRangeCtl","Adding range cntl:" & prefix & rangeStart & "-" & rangeEnd & "." & decimals & " as TextBox_Number " & suffix)
     ' want ePairStatusControl.Both so can change via URL
     Pair = New VSPair(HomeSeerAPI.ePairStatusControl.Both)
     Pair.PairType = VSVGPairType.Range
@@ -320,6 +363,7 @@ Public Sub GenRangeStatusValue(ByVal dvRef As Integer,ByVal rangeStart As Double
     Dim GPair As VGPair
 
     If image <> "" Then
+        hs.WriteLog("GenRangeStatusValue","Adding status value:" & rangeStart & "-" & rangeEnd & " as " & image)
         GPair = New VGPair
         GPair.PairType = VSVGPairType.Range
         GPair.RangeStart = rangeStart
@@ -334,10 +378,49 @@ Public Sub GenSingleStatusValue(ByVal dvRef As Integer,ByVal val As Double,ByVal
     Dim GPair As VGPair
 
     If image <> "" Then
+        hs.WriteLog("GenSingleStatusValue","Adding status value:" & val & " as " & image)
         GPair = New VGPair
         GPair.PairType = VSVGPairType.SingleValue
         GPair.Set_Value = val
         GPair.Graphic = image
         hs.DeviceVGP_AddPair(dvRef, GPair)
     End If
+End Sub
+
+' Look for and remove extra MyMonitorNew objects. 
+' Nice to have one in reserve to avoid race condition but more than one is not useful.
+Public Sub chkDups(ignored As Object)
+    Dim label As String = "chkDups"
+    Dim found As Integer = 0
+    Try
+        hs.WriteLog(label, "Running")
+        Dim dv As Scheduler.Classes.DeviceClass
+        Dim EN As Scheduler.Classes.clsDeviceEnumeration = hs.GetDeviceEnumerator  'Get all devices
+        If EN Is Nothing Then
+            hs.WriteLog(label, "Error getting Enumerator")
+            Exit Sub
+        End If
+        ' overwrite file
+        Do  'check each device that was enumerated
+            dv = EN.GetNext
+            If dv Is Nothing Then  'No device, so quit
+                hs.WriteLog(label, "No devices found")
+                Exit Sub
+            End If
+            If InStr(dv.Name(Nothing), "MyMonitorNew") > 0 Then
+                hs.WriteLog(label, "device:" & dv.Ref(Nothing) & ":" & dv.Location2(Nothing) & " " & dv.Location(Nothing) & " " & dv.Name(Nothing) & " with value:" & dv.devValue(Nothing) & " updated:" & dv.Last_Change(Nothing))
+                found = found + 1
+                If found > 1 Then
+                    hs.DeleteDevice(dv.Ref(Nothing))
+                End If
+            End If
+        Loop Until EN.Finished
+        If found > 1 Then
+            found = found - 1
+            sayString("Removed " & found & " extra My Monitor New objects")
+        End If
+        hs.WriteLog(label, "Removed " & found & " extra My Monitor New objects")
+    Catch ex As Exception
+            hs.WriteLog("Error", "Exception in script " & label & ":  " & ex.Message)
+    End Try
 End Sub
