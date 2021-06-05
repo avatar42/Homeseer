@@ -6,6 +6,7 @@
 Dim TRIGGER As String = "trigger"
 Dim SHOW As String = "show"
 Dim PROFILE As String = "profile"
+Dim ALL_CAMS As String = "_all" '"All cameras"
 
 Dim port2 = 8078
 Dim port3 = 8076
@@ -58,32 +59,32 @@ End Sub
 
 ' Set all consoles back to All cameras
 Public Sub consoleClear(ByVal notUsed As String)
-    callBI("Iris6","All cameras",port2,SHOW)
-    callBI("Iris3","All cameras",port3,SHOW)
-    callBI("Iris4","All cameras",port4,SHOW)
-    callBI("Iris5","All cameras",port5,SHOW)
+    callBI("Iris6", ALL_CAMS, port2, SHOW)
+    callBI("Iris3", ALL_CAMS, port3, SHOW)
+    callBI("Iris4", ALL_CAMS, port4, SHOW)
+    callBI("Iris5", ALL_CAMS, port5, SHOW)
     hs.SetDeviceString(hs.GetVar("FocusedcamRef"), "All consoles cleared", True)
     hs.SetDeviceValueByRef(hs.GetVar("FocusedcamRef"), 0, True)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris2Clear(ByVal notUsed As String)
-    callBI("Iris6","All cameras",port2,SHOW)
+    callBI("Iris6", ALL_CAMS, port2, SHOW)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris3Clear(ByVal notUsed As String)
-    callBI("Iris3","All cameras",port3,SHOW)
+    callBI("Iris3", ALL_CAMS, port3, SHOW)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris4Clear(ByVal notUsed As String)
-    callBI("Iris4","All cameras",port4,SHOW)
+    callBI("Iris4", ALL_CAMS, port4, SHOW)
 End Sub
 
 ' Set console back to All cameras
 Public Sub Iris5Clear(ByVal notUsed As String)
-    callBI("Iris5","All cameras",port5,SHOW)
+    callBI("Iris5", ALL_CAMS, port5, SHOW)
 End Sub
 
 ' Set console back to All cameras
@@ -141,7 +142,7 @@ End Sub
 ' ctlName is the short cam or group name in the camera's config. Must macth exactly.
 '
 ' With command of show = shows the camera group on the console. 
-' ctlName is the cam group name (camera names will not work) in the camera's config. Must macth exactly. Toi show all use "All cameras"
+' ctlName is the cam group name (camera names will not work) in the camera's config. Must macth exactly. To show all use ALL_CAMS
 ' uses (CamSwitchInputRef) control for PiP HDMI switch
 ' (FocusedcamRef) holds last Highlighting message
 Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As integer, ByVal command As String)
@@ -182,7 +183,7 @@ Public Sub callBI(ByVal host As String, ByVal ctlName As String, ByVal port As i
                 hs.WriteLog("callBI", "FocusedcamRef:" & hs.GetVar("FocusedcamRef") & "parm:" & "Highlighting " & ctlName & " on " & host)
             End Try
 
-            If (Instr(ctlName,"All cameras") > 0) Then
+            If (Instr(ctlName, ALL_CAMS) > 0) Then
                 ' switch video distribution to main video (input 1)
                 hs.SetDeviceValueByRef(hs.GetVar("CamSwitchInputRef"), 1, True)
             End If
